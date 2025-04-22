@@ -344,6 +344,7 @@ function App() {
   };
 
   const calculateKmAmount = (km, isCompanyCar) => {
+    console.log("km", km);
     const distance = parseFloat(km);
     if (!isCompanyCar) return (distance * 0.4).toFixed(2);
     else {

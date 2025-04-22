@@ -63,7 +63,7 @@ export const KmEditDialog = ({
       ...kmData,
       [name]: type === "checkbox" ? checked : value,
       amount: calculateKmAmount(
-        kmData.totalKm,
+        name === "totalKm" ?  value : kmData.totalKm,
         name === "isCompanyCar" ? checked : kmData.isCompanyCar
       ),
     });
