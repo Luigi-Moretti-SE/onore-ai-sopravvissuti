@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import {
   Box,
+  Button,
+  Checkbox,
   IconButton,
   Paper,
   Table,
@@ -11,6 +13,7 @@ import {
   TableRow,
   Typography,
   useMediaQuery,
+  FormControlLabel,
   Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -43,6 +46,12 @@ export const KmTable = ({
     setEditDialogOpen(false);
   };
 
+  const handleCompanyCarToggle = (index) => {
+    if (onCompanyCarToggle) {
+      onCompanyCarToggle(index);
+    }
+  };
+
   return (
     <Box sx={{ mt: 2, mb: 2 }}>
       <Divider sx={{ mb: 2 }} />
@@ -53,10 +62,16 @@ export const KmTable = ({
             <TableHead>
               <TableRow>
                 <TableCell>Data</TableCell>
+                <TableCell>Modalità</TableCell>
+                <TableCell>Marca</TableCell>
+                <TableCell>Modello</TableCell>
+                <TableCell>Cilindrata</TableCell>
                 <TableCell>Partenza</TableCell>
                 {!isMobile && <TableCell>Tappe</TableCell>}
                 <TableCell>Destinazione</TableCell>
                 <TableCell>KM</TableCell>
+                <TableCell>Auto Aziendale</TableCell>
+                <TableCell>Importo (€)</TableCell>
                 <TableCell>Azioni</TableCell>
               </TableRow>
             </TableHead>
@@ -64,14 +79,31 @@ export const KmTable = ({
               {kms.map((km, index) => (
                 <TableRow key={index} hover>
                   <TableCell>{km.date || "-"}</TableCell>
-                  <TableCell>{km.startCity}</TableCell>
+                  <TableCell>{km.paymentMethod || "Elettronico"}</TableCell>
+                  <TableCell>{km.carBrand.toUpperCase()}</TableCell>
+                  <TableCell>{km.carModel.toUpperCase()}</TableCell>
+                  <TableCell>{km.carEngine}</TableCell>
+                  <TableCell>{km.startCity.toUpperCase()}</TableCell>
                   {!isMobile && (
                     <TableCell>
-                      {km.waypoints ? km.waypoints.join(" | ") : ""}
+                      {km.waypoints ? km.waypoints.join(" | ").toUpperCase() : ""}
                     </TableCell>
                   )}
-                  <TableCell>{km.endCity}</TableCell>
+                  <TableCell>{km.endCity.toUpperCase()}</TableCell>
                   <TableCell>{km.totalKm}</TableCell>
+                  <TableCell>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={km.isCompanyCar || false}
+                          onChange={() => handleCompanyCarToggle(index)}
+                          size="small"
+                        />
+                      }
+                      label=""
+                    />
+                  </TableCell>
+                  <TableCell>{km.amount}</TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex" }}>
                       <IconButton

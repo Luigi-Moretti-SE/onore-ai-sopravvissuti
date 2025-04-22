@@ -13,9 +13,8 @@ import {
   Paper,
   Snackbar,
   Typography,
-  useMediaQuery,
 } from "@mui/material";
-import { ThemeProvider, useTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import React, { useState } from "react";
 import logo from "./assets/Keytech.png";
 import { MapDialog } from "./components/dialogs/MapDialog";
@@ -41,10 +40,6 @@ const MONTHS = [
 ];
 
 function App() {
-  const themeM = useTheme();
-  const isMobile = useMediaQuery(themeM.breakpoints.down("sm"));
-
-  const [isLoading, setIsLoading] = useState(false);
   const [inputErrors, setInputErrors] = useState({});
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -72,12 +67,30 @@ function App() {
 
   const [travelDate, setTravelDate] = useState(() => {
     const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(today.getDate()).padStart(2, "0")}`;
   });
 
   const validateInputsMap = () => {
     const errors = {};
     if (!travelDate) errors.travelDate = "Data Viaggio";
+    if (!startCity) errors.startCity = "Città di partenza";
+    if (!startAddress) errors.startAddress = "Indirizzo di partenza";
+    if (!endCity) errors.endCity = "Città di arrivo";
+    if (!endAddress) errors.endAddress = "Indirizzo di arrivo";
+    if (!carBrand) errors.carBrand = "Marca";
+    if (!carModel) errors.carModel = "Modello";
+    //if (!carEngine) errors.carEngine = "Tipo di motore";
+    return errors;
+  };
+
+  const validateInputs = () => {
+    const errors = {};
+    if (!travelDate) errors.travelDate = "Data Viaggio";
+    if (!carBrand) errors.carBrand = "Marca";
+    if (!carModel) errors.carModel = "Modello";
     return errors;
   };
 
@@ -88,6 +101,30 @@ function App() {
   const handleCloseSnackbar = (_event, reason) => {
     if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleValidation = async (type) => {
+    
+    if (type === "Excel" || type === "Word") {
+      showMessage("Non disponibile nella versione DEMO", "warning");
+      return;
+    }
+
+    const errors = validateInputs();
+    if (Object.keys(errors).length > 0) {
+      setInputErrors(errors);
+      showMessage(
+        "Impossibile generare " +
+          type +
+          ", parametri mancanti: " +
+          Object.values(errors).join(", "),
+        "error"
+      );
+      return;
+    }
+    setInputErrors({});
+
+    handlePreview(type);
   };
 
   const handleValidationMap = async () => {
@@ -103,77 +140,6 @@ function App() {
     }
     setInputErrors({});
     handleSelectRoute();
-  };
-
-  const handlePreview = async (type) => {
-    try {
-      const getMonthName = (date) => {
-        return MONTHS[date.getMonth()];
-      };
-
-      let month;
-      let period = "";
-
-      if (kmEntries.length > 0) {
-        const kmDates = kmEntries
-          .filter(entry => entry.date)
-          .map(entry => {
-            const parts = entry.date.split("/");
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-          });
-        
-        if (kmDates.length > 0) {
-          kmDates.sort((a, b) => b - a);
-          const lastDate = kmDates[0];
-          
-          const firstDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), 1);
-          const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 0);
-          
-          const formatDate = (date) => {
-            const day = String(date.getDate()).padStart(2, "0");
-            const month = String(date.getMonth() + 1).padStart(2, "0");
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-          };
-          
-          period = `${formatDate(firstDay)} - ${formatDate(lastDay)}`;
-          month = getMonthName(firstDay);
-        } else {
-          const now = new Date();
-          month = getMonthName(now);
-        }
-      } else {
-        const now = new Date();
-        month = getMonthName(now);
-      }
-
-      const previewData = {
-        cliente: "Cliente",
-        oggettoAttivita: "Rimborso Chilometrico",
-        cognome: "Cognome",
-        nome: "Nome",
-        sede: "Sede",
-        kmEntries,
-        filename: `RIMBORSO_KM_COGNOME_${month}_2025`,
-        period: period,
-      };
-
-      if (type === "Excel") {
-        sessionStorage.setItem("excelPreviewData", JSON.stringify(previewData));
-        window.open("/excel-preview", "_blank");
-      }
-      if (type === "Word") {
-        sessionStorage.setItem("wordPreviewData", JSON.stringify(previewData));
-        window.open("/word-preview", "_blank");
-      }
-      if (type === "PDF") {
-        sessionStorage.setItem("pdfPreviewData", JSON.stringify(previewData));
-        window.open("/pdf-preview", "_blank");
-      }
-    } catch (error) {
-      console.error(error);
-      showMessage("Errore nella generazione dell'anteprima " + type, "error");
-    }
   };
 
   const formatDuration = (minutes) => {
@@ -352,10 +318,10 @@ function App() {
   };
 
   const handleConfirmRoute = (confirmedRouteData) => {
-    const formattedDate = travelDate ? 
-      travelDate.split('-').reverse().join('/') : 
-      new Date().toLocaleDateString('it-IT');
-    
+    const formattedDate = travelDate
+      ? travelDate.split("-").reverse().join("/")
+      : new Date().toLocaleDateString("it-IT");
+
     const newKmEntry = {
       carBrand,
       carModel,
@@ -370,7 +336,7 @@ function App() {
       routePreference,
       date: formattedDate,
       userName: "Nome",
-      userSurname: "Cognome"
+      userSurname: "Cognome",
     };
 
     handleAddRoute(newKmEntry);
@@ -388,6 +354,95 @@ function App() {
   const handleReset = () => {
     setKmEntries([]);
     showMessage("Percorsi svuotati", "success");
+  };
+
+  const handlePreview = async (type) => {
+    try {
+      const getMonthName = (date) => {
+        return MONTHS[date.getMonth()];
+      };
+
+      let month;
+      let period = "";
+
+      if (kmEntries.length > 0) {
+        const firstDateParts = kmEntries[0].date.split("/");
+        const firstDate = new Date(firstDateParts[2], firstDateParts[1] - 1, 1);
+
+        const lastDateParts = kmEntries[kmEntries.length - 1].date.split("/");
+        const lastDate = new Date(lastDateParts[2], lastDateParts[1] - 1, 1);
+        lastDate.setMonth(lastDate.getMonth() + 1);
+        lastDate.setDate(0);
+
+        const formatDate = (date) => {
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        };
+
+        period = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+        month = getMonthName(firstDate);
+      } else if (kmEntries.length > 0) {
+        // Usa la data dell'ultimo rimborso km
+        const kmDates = kmEntries
+          .filter(entry => entry.date)
+          .map(entry => {
+            const parts = entry.date.split("/");
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+          });
+        
+        if (kmDates.length > 0) {
+          // Ordina le date e prendi la più recente
+          kmDates.sort((a, b) => b - a);
+          const lastDate = kmDates[0];
+          
+          // Calcola il primo e l'ultimo giorno del mese
+          const firstDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), 1);
+          const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 0);
+          
+          const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+          };
+          
+          period = `${formatDate(firstDay)} - ${formatDate(lastDay)}`;
+          month = getMonthName(firstDay);
+        } else {
+          // Se non ci sono date nei rimborsi, usa la data corrente
+          const now = new Date();
+          month = getMonthName(now);
+        }
+      } else {
+        // Se non ci sono né fatture né rimborsi km, usa il mese corrente
+        const now = new Date();
+        month = getMonthName(now);
+      }
+
+      const previewData = {
+        kmEntries,
+        filename: `RIMBORSO_KM_${month}_2025`,
+        period: period,
+      };
+
+      if (type === "Excel") {
+        sessionStorage.setItem("excelPreviewData", JSON.stringify(previewData));
+        window.open("/excel-preview", "_blank");
+      }
+      if (type === "Word") {
+        sessionStorage.setItem("wordPreviewData", JSON.stringify(previewData));
+        window.open("/word-preview", "_blank");
+      }
+      if (type === "PDF") {
+        sessionStorage.setItem("pdfPreviewData", JSON.stringify(previewData));
+        window.open("/pdf-preview", "_blank");
+      }
+    } catch (error) {
+      console.error(error);
+      showMessage("Errore nella generazione dell'anteprima " + type, "error");
+    }
   };
 
   return (
@@ -492,10 +547,52 @@ function App() {
               </Box>
             </Grid>
 
-            <Grid size={12} sx={{ pb: 4, display: "flex", justifyContent: "flex-end", mt: 2 }}>
-              <Button variant="outlined" color="error" onClick={handleReset}>
-                Svuota Percorsi
-              </Button>
+            <Grid size={12} sx={{ pb: 4 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 2,
+                  mt: 2,
+                }}
+              >
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 1,
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => handleValidation("Excel")}
+                    >
+                      Anteprima Excel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="info"
+                      onClick={() => handleValidation("Word")}
+                    >
+                      Anteprima Word
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => handleValidation("PDF")}
+                    >
+                      Anteprima PDF
+                    </Button>
+                  </Box>
+                </Box>
+                <Button variant="outlined" color="error" onClick={handleReset}>
+                  Svuota Percorsi
+                </Button>
+              </Box>
+
             </Grid>
           </Grid>
         </Box>
@@ -592,23 +689,23 @@ function App() {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                display: "flex", 
+            <Typography
+              variant="body2"
+              sx={{
+                display: "flex",
                 alignItems: "center",
                 color: "text.secondary",
-                fontSize: "0.70rem"
+                fontSize: "0.70rem",
               }}
             >
-             Developed by&nbsp;<b>© Keytech</b>&nbsp;Web Team
+              Developed by&nbsp;<b>© Keytech</b>&nbsp;Web Team
             </Typography>
           </Box>
-          <Typography 
-            variant="body2" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            sx={{
               color: "text.secondary",
-              fontSize: "0.70rem"
+              fontSize: "0.70rem",
             }}
           >
             Powered by <b>Keytech AI</b>

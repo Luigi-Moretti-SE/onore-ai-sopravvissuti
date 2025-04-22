@@ -11,7 +11,7 @@ import {
 } from "react-leaflet";
 //import mapData from '../assets/samples/map.json';
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import markerIcon from "../../assets/map-marker.svg";
+import markerIcon from "/marker-icon-2x.png";
 
 // Fix per le icone di Leaflet in React
 delete L.Icon.Default.prototype._getIconUrl;

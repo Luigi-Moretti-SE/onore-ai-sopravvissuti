@@ -51,7 +51,7 @@ export const KmEditDialog = ({
         totalKm: km.totalKm || "",
         isCompanyCar: km.isCompanyCar || false,
         amount: km.amount || "",
-        date: km.date || "", 
+        date: km.date || "",
         index: km.index,
       });
     }
@@ -83,7 +83,7 @@ export const KmEditDialog = ({
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField
               fullWidth
               label="Marca Auto"
@@ -95,7 +95,7 @@ export const KmEditDialog = ({
             />
           </Grid>
 
-          <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField
               fullWidth
               label="Modello Auto"
@@ -107,7 +107,7 @@ export const KmEditDialog = ({
             />
           </Grid>
 
-          <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField
               fullWidth
               label="Cilindrata (cc)"
@@ -120,11 +120,11 @@ export const KmEditDialog = ({
             />
           </Grid>
 
-          <Grid item size={12}>
+          <Grid size={12}>
             <Divider />
           </Grid>
 
-          <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField
               fullWidth
               label="KM Totali"
@@ -137,7 +137,7 @@ export const KmEditDialog = ({
             />
           </Grid>
 
-          <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField
               select
               fullWidth
@@ -156,7 +156,7 @@ export const KmEditDialog = ({
             </TextField>
           </Grid>
 
-          <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -169,21 +169,23 @@ export const KmEditDialog = ({
             />
           </Grid>
 
-          <Grid item size={12}>
+          <Grid size={12}>
             <Divider />
           </Grid>
 
           <Grid
-            item
-            size={12} spacing={2}
+            size={12}
+            spacing={2}
             sx={{ display: "flex", justifyContent: "center" }}
           >
-            <Grid item size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Data"
                 type="date"
-                value={kmData.date ? kmData.date.split("/").reverse().join("-") : ""}
+                value={
+                  kmData.date ? kmData.date.split("/").reverse().join("-") : ""
+                }
                 onChange={(e) => {
                   const htmlValue = e.target.value;
                   if (htmlValue) {
@@ -194,15 +196,17 @@ export const KmEditDialog = ({
                     setKmData({ ...kmData, date: "" });
                   }
                 }}
-                InputLabelProps={{
-                  shrink: true,
+                slotProps={{
+                  input: {
+                    shrink: true,
+                  },
                 }}
                 size="small"
                 required
               />
             </Grid>
 
-            <Grid item size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Importo (€)"
@@ -222,7 +226,7 @@ export const KmEditDialog = ({
                   },
                 }}
                 sx={{
-                    ml: 2,
+                  ml: 2,
                   "& .MuiInputLabel-root": {
                     fontWeight: "bold",
                   },

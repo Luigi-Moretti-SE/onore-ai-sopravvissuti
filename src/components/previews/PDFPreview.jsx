@@ -55,51 +55,9 @@ export const PDFPreview = () => {
 
   const generatePDF = async (data, logoData) => {
     const {
-      cliente,
-      cognome,
-      nome,
-      sede,
-      oggettoAttivita,
       period,
-      fatture: unsortedInvoices = [],
       kmEntries = [], // Ottieni i dati dei rimborsi km
     } = data;
-
-    const invoices = [...unsortedInvoices].sort((a, b) => {
-      const dateA = a.date.split("/").reverse().join("-");
-      const dateB = b.date.split("/").reverse().join("-");
-      return new Date(dateA) - new Date(dateB);
-    });
-
-    const totals = invoices.reduce(
-      (acc, invoice) => {
-        let amountParsed = parseFloat(
-          String(invoice.amount).replace(",", ".") || 0
-        );
-
-        // Check if the invoice is prepaid
-        if (invoice.prepagata) {
-          acc.prepaid += parseFloat(amountParsed || 0);
-        } else {
-          acc.total += parseFloat(amountParsed || 0);
-          switch (invoice.motive) {
-            case "food":
-              acc.food += parseFloat(amountParsed || 0);
-              break;
-            case "transportation":
-              acc.transportation += parseFloat(amountParsed || 0);
-              break;
-            case "housing":
-              acc.housing += parseFloat(amountParsed || 0);
-              break;
-            default:
-              break;
-          }
-        }
-        return acc;
-      },
-      { total: 0, food: 0, transportation: 0, housing: 0, prepaid: 0 }
-    );
 
     // Calcola i totali dei rimborsi chilometrici
     const kmSummary = {
@@ -122,11 +80,11 @@ export const PDFPreview = () => {
     const totalKmAmount =
       kmSummary.totalPersonalAmount + kmSummary.totalCompanyAmount;
 
-    const MOTIVE_TRANSLATIONS = {
-      food: "Vitto",
-      transportation: "Trasporto",
-      housing: "Alloggio",
-    };
+    // const MOTIVE_TRANSLATIONS = {
+    //   food: "Vitto",
+    //   transportation: "Trasporto",
+    //   housing: "Alloggio",
+    // };
 
     const doc = new jsPDF("p", "mm", "a4");
 
@@ -140,11 +98,6 @@ export const PDFPreview = () => {
 
     doc.setFont("helvetica");
     doc.setFontSize(16);
-
-    const titleText = `Rimborso Spese ${cognome} ${nome} (${sede})`;
-    doc.text(titleText, doc.internal.pageSize.width / 2, 40, {
-      align: "center",
-    });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
@@ -166,135 +119,134 @@ export const PDFPreview = () => {
       displayPeriod = `${formatDate(firstDay)} - ${formatDate(lastDay)}`;
     }
     
-    doc.text(`Periodo ${displayPeriod}`, doc.internal.pageSize.width / 2, 48, {
+    doc.text(`Periodo ${displayPeriod}`, doc.internal.pageSize.width / 2, 40, {
       align: "center",
     });
 
     const pageWidth = doc.internal.pageSize.width;
-    const tableWidth1 = 180;
+    const tableWidth1 = 175;
     const leftMargin1 = (pageWidth - tableWidth1) / 2; // Calculate left margin to center
 
-    // Aggiungi la condizione per verificare se ci sono fatture
-    if (invoices && invoices.length > 0) {
-      // Tabella fatture
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Riepilogo Fatture e Scontrini", pageWidth / 2, 55, {
-        align: "center",
-      });
-      doc.setFont("helvetica", "normal");
+    // // Aggiungi la condizione per verificare se ci sono fatture
+    // if (invoices && invoices.length > 0) {
+    //   // Tabella fatture
+    //   doc.setFontSize(14);
+    //   doc.setFont("helvetica", "bold");
+    //   doc.text("Riepilogo Fatture e Scontrini", pageWidth / 2, 55, {
+    //     align: "center",
+    //   });
+    //   doc.setFont("helvetica", "normal");
 
-      autoTable(doc, {
-        startY: 60,
-        head: [
-          [
-            "Data",
-            "Cliente",
-            "Oggetto Attività",
-            "Descrizione",
-            "Pagamento",
-            "Importo",
-            "Città",
-            "Prepagata",
-            "Fattura",
-          ],
-        ],
-        body: invoices.map((invoice) => [
-          invoice.date,
-          cliente,
-          oggettoAttivita,
-          `${invoice.invoice_title} - ${
-            MOTIVE_TRANSLATIONS[invoice.motive] || invoice.motive
-          }`,
-          invoice.payment_method,
-          `€ ${parseFloat(String(invoice.amount).replace(",", ".")).toFixed(2)}`,
-          invoice.city,
-          invoice.prepagata ? "Sì" : "No",
-          invoice.invoice === true || invoice.invoice === "true" ? "Sì" : "No",
-        ]),
-        theme: "grid",
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-          lineColor: [128, 128, 128],
-          textColor: [0, 0, 0],
-          lineWidth: 0.5,
-        },
-        headStyles: {
-          fillColor: [227, 242, 253],
-          textColor: [0, 0, 0],
-          fontSize: 8,
-          fontStyle: "bold",
-          halign: "left",
-        },
-        columnStyles: {
-          0: { cellWidth: 18 },
-          1: { cellWidth: 21 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 36 },
-          4: { cellWidth: 19 },
-          5: { cellWidth: 15, halign: "right" },
-          6: { cellWidth: 18 },
-          7: { cellWidth: 18, halign: "center" },
-          8: { cellWidth: 14, halign: "center" },
-        },
-        margin: { left: leftMargin1 },
-      });
+    //   autoTable(doc, {
+    //     startY: 60,
+    //     head: [
+    //       [
+    //         "Data",
+    //         "Cliente",
+    //         "Oggetto Attività",
+    //         "Descrizione",
+    //         "Pagamento",
+    //         "Importo",
+    //         "Città",
+    //         "Prepagata",
+    //         "Fattura",
+    //       ],
+    //     ],
+    //     body: invoices.map((invoice) => [
+    //       invoice.date,
+    //       cliente,
+    //       oggettoAttivita,
+    //       `${invoice.invoice_title} - ${
+    //         MOTIVE_TRANSLATIONS[invoice.motive] || invoice.motive
+    //       }`,
+    //       invoice.payment_method,
+    //       `€ ${parseFloat(String(invoice.amount).replace(",", ".")).toFixed(2)}`,
+    //       invoice.city,
+    //       invoice.prepagata ? "Sì" : "No",
+    //       invoice.invoice === true || invoice.invoice === "true" ? "Sì" : "No",
+    //     ]),
+    //     theme: "grid",
+    //     styles: {
+    //       fontSize: 8,
+    //       cellPadding: 2,
+    //       lineColor: [128, 128, 128],
+    //       textColor: [0, 0, 0],
+    //       lineWidth: 0.5,
+    //     },
+    //     headStyles: {
+    //       fillColor: [227, 242, 253],
+    //       textColor: [0, 0, 0],
+    //       fontSize: 8,
+    //       fontStyle: "bold",
+    //       halign: "left",
+    //     },
+    //     columnStyles: {
+    //       0: { cellWidth: 18 },
+    //       1: { cellWidth: 21 },
+    //       2: { cellWidth: 22 },
+    //       3: { cellWidth: 36 },
+    //       4: { cellWidth: 19 },
+    //       5: { cellWidth: 15, halign: "right" },
+    //       6: { cellWidth: 18 },
+    //       7: { cellWidth: 18, halign: "center" },
+    //       8: { cellWidth: 14, halign: "center" },
+    //     },
+    //     margin: { left: leftMargin1 },
+    //   });
 
-      const totalsData = [
-        ["Totale Trasporto:", `€ ${totals.transportation.toFixed(2)}`],
-        ["Totale Alloggio:", `€ ${totals.housing.toFixed(2)}`],
-        ["Totale Vitto:", `€ ${totals.food.toFixed(2)}`],
-        ["Totale Prepagata:", `€ ${totals.prepaid.toFixed(2)}`],
-        [
-          {
-            content: "Totale (escl. prepagata):",
-            styles: { fillColor: [200, 200, 200] },
-          },
-          {
-            content: `€ ${totals.total.toFixed(2)}`,
-            styles: { fillColor: [200, 200, 200], fontStyle: "bold" },
-          },
-        ],
-      ];
+    //   const totalsData = [
+    //     ["Totale Trasporto:", `€ ${totals.transportation.toFixed(2)}`],
+    //     ["Totale Alloggio:", `€ ${totals.housing.toFixed(2)}`],
+    //     ["Totale Vitto:", `€ ${totals.food.toFixed(2)}`],
+    //     ["Totale Prepagata:", `€ ${totals.prepaid.toFixed(2)}`],
+    //     [
+    //       {
+    //         content: "Totale (escl. prepagata):",
+    //         styles: { fillColor: [200, 200, 200] },
+    //       },
+    //       {
+    //         content: `€ ${totals.total.toFixed(2)}`,
+    //         styles: { fillColor: [200, 200, 200], fontStyle: "bold" },
+    //       },
+    //     ],
+    //   ];
 
-      // Tabella totali fatture
-      const tableWidth2 = 80;
-      const leftMargin2 = (pageWidth - tableWidth2) / 2;
+    //   // Tabella totali fatture
+    //   const tableWidth2 = 80;
+    //   const leftMargin2 = (pageWidth - tableWidth2) / 2;
 
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        body: totalsData,
-        theme: "grid",
-        styles: {
-          fontSize: 10,
-          cellPadding: 2,
-          lineColor: [128, 128, 128],
-          lineWidth: 0.5,
-          textColor: [0, 0, 0],
-        },
-        columnStyles: {
-          0: {
-            cellWidth: 45,
-            fontStyle: "bold",
-          },
-          1: {
-            cellWidth: 25,
-            halign: "right",
-          },
-        },
-        margin: { left: leftMargin2 },
-      });
-    }
-
-    // Modifica per la sezione dei rimborsi km
+    //   autoTable(doc, {
+    //     startY: doc.lastAutoTable.finalY + 10,
+    //     body: totalsData,
+    //     theme: "grid",
+    //     styles: {
+    //       fontSize: 10,
+    //       cellPadding: 2,
+    //       lineColor: [128, 128, 128],
+    //       lineWidth: 0.5,
+    //       textColor: [0, 0, 0],
+    //     },
+    //     columnStyles: {
+    //       0: {
+    //         cellWidth: 45,
+    //         fontStyle: "bold",
+    //       },
+    //       1: {
+    //         cellWidth: 25,
+    //         halign: "right",
+    //       },
+    //     },
+    //     margin: { left: leftMargin2 },
+    //   });
+    // }
 
     // Aggiungi la tabella dei rimborsi km se ci sono voci
     if (kmEntries && kmEntries.length > 0) {
       // Determina il punto di partenza in base alla presenza di fatture
-      const startY = invoices && invoices.length > 0 
-        ? doc.lastAutoTable.finalY + 25 
-        : 55;
+      const startY = 50; 
+      // invoices && invoices.length > 0 
+      //   ? doc.lastAutoTable.finalY + 25 
+      //   : 55;
       
       // Intestazione sezione rimborsi km
       doc.setFontSize(14);
@@ -352,15 +304,15 @@ export const PDFPreview = () => {
           halign: "left",
         },
         columnStyles: {
-          0: { cellWidth: 18 },
-          1: { cellWidth: 21 },
-          2: { cellWidth: 22 },
+          0: { cellWidth: 20 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 23 },
           3: { cellWidth: 36 },
-          4: { cellWidth: 19 },
+          4: { cellWidth: 23 },
           5: { cellWidth: 15, halign: "right" },
           6: { cellWidth: 18 },
           7: { cellWidth: 18, halign: "center" },
-          8: { cellWidth: 14, halign: "center" },
+          //8: { cellWidth: 14, halign: "center" },
         },
         margin: { left: leftMargin1 },
       });
@@ -434,7 +386,7 @@ export const PDFPreview = () => {
       });
     
       // Tabella riepilogo totali complessivi
-      const grandTotal = totals.total + totalKmAmount;
+      const grandTotal = totalKmAmount; // + totals.total ;
       const tableWidth4 = 120;
       const leftMargin4 = (pageWidth - tableWidth4) / 2;
     

@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import React from "react";
 
-export const SummaryCard = ({ summary = [], kmEntries = [] }) => {
+export const SummaryCard = ({ summary, kmEntries = [] }) => {
   // Calcola il totale dei chilometri per auto aziendale e personale
   const kmSummary = {
     totalPersonal: kmEntries
@@ -87,9 +87,6 @@ export const SummaryCard = ({ summary = [], kmEntries = [] }) => {
       });
   }, [kmEntries]);
 
-  // Determine if we should show the invoices section
-  const showInvoicesSection = summary && summary.length > 0;
-
   return (
     <Card
       className="MuiCard-solidBorder-gray"
@@ -109,96 +106,24 @@ export const SummaryCard = ({ summary = [], kmEntries = [] }) => {
         }}
       />
 
-      {/* Sezione Riepilogo Fatture - mostra solo se ci sono dati di fatture */}
-      {showInvoicesSection && (
-        <Box sx={{ mb: 3 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{ px: 2, py: 1, fontWeight: "bold" }}
-          >
-            Fatture e Scontrini
-          </Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Data</TableCell>
-                  <TableCell>Numero di Fatture</TableCell>
-                  <TableCell>Importo Totale</TableCell>
-                  <TableCell>Totale Vitto</TableCell>
-                  <TableCell>Totale Trasporto</TableCell>
-                  <TableCell>Totale Alloggio</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {summary.length > 0 ? (
-                  summary.map((item, index) => (
-                    <TableRow
-                      key={index}
-                      hover
-                      sx={{ cursor: "pointer", borderRadius: "8px" }}
-                    >
-                      <TableCell>{item.date}</TableCell>
-                      <TableCell>{item.invoice_count}</TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Typography variant="body2" noWrap>
-                            {Math.abs(Number(item.total_amount)).toFixed(2)} €
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Typography variant="body2" noWrap>
-                            {Math.abs(Number(item.food_total)).toFixed(2)} €
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Typography variant="body2" noWrap>
-                            {Math.abs(Number(item.transportation_total)).toFixed(2)} €
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Typography variant="body2" noWrap>
-                            {Math.abs(Number(item.housing_total)).toFixed(2)} €
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      Nessuna fattura disponibile
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )}
-
-      {showInvoicesSection && <Divider sx={{ my: 2 }} />}
-
       {/* Nuova sezione Riepilogo Rimborsi Km */}
       <Box sx={{ mt: 2 }}>
         <Typography
           variant="subtitle1"
           sx={{ px: 2, py: 1, fontWeight: "bold" }}
         >
+          Rimborsi Chilometrici
         </Typography>
         <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Data</TableCell>
-                <TableCell>Numero Percorsi</TableCell>
+                <TableCell>Numero Rimborsi</TableCell>
+                <TableCell>Km Auto Personale</TableCell>
+                <TableCell>Km Auto Aziendale</TableCell>
                 <TableCell>Totale Km</TableCell>
+                <TableCell>Importo (€)</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -208,7 +133,10 @@ export const SummaryCard = ({ summary = [], kmEntries = [] }) => {
                     <TableRow key={index} hover>
                       <TableCell>{item.date}</TableCell>
                       <TableCell>{item.count}</TableCell>
+                      <TableCell>{item.totalPersonalKm.toFixed(2)}</TableCell>
+                      <TableCell>{item.totalCompanyKm.toFixed(2)}</TableCell>
                       <TableCell>{item.totalKm.toFixed(2)}</TableCell>
+                      <TableCell>{item.totalAmount.toFixed(2)} €</TableCell>
                     </TableRow>
                   ))}
                   <TableRow hover sx={{ fontWeight: "bold" }}>
@@ -217,13 +145,22 @@ export const SummaryCard = ({ summary = [], kmEntries = [] }) => {
                       {kmSummary.totalEntries}
                     </TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
+                      {kmSummary.totalPersonal.toFixed(2)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      {kmSummary.totalCompany.toFixed(2)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
                       {totalKm.toFixed(2)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      {totalAmount.toFixed(2)} €
                     </TableCell>
                   </TableRow>
                 </>
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} align="center">
+                  <TableCell colSpan={6} align="center">
                     Nessun rimborso chilometrico disponibile
                   </TableCell>
                 </TableRow>
