@@ -110,7 +110,7 @@ const RouteDialog = ({ open, onClose, routeData, formatDuration }) => {
 };
 
 // Friends Trip Planner App
-const FriendsTripPlanner = () => {
+export const FriendsTripPlanner = () => {
   // Define the list of friends with their addresses
   const [friends, setFriends] = useState([
     { name: "Mattosky", address: "Via Nadir Quinto, 42, 00127 Roma RM" },
@@ -589,9 +589,12 @@ const FriendsTripPlanner = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <React.StrictMode>
-    <FriendsTripPlanner />
-  </React.StrictMode>
-);
+// Only render directly if this file is the entry point
+if (import.meta.env.DEV) {
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(
+    <React.StrictMode>
+      <FriendsTripPlanner />
+    </React.StrictMode>
+  );
+}
