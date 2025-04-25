@@ -1,21 +1,27 @@
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from "@mui/icons-material/Close";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import PersonIcon from "@mui/icons-material/Person";
+import PlaceIcon from "@mui/icons-material/Place";
 import {
-    Box,
-    Button,
-    CircularProgress,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    FormControl,
-    IconButton,
-    MenuItem,
-    Paper,
-    Select,
-    Typography
-} from '@mui/material';
-import React from 'react';
-import Maps from '../maps/Maps';
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  IconButton,
+  LinearProgress,
+  MenuItem,
+  Paper,
+  Select,
+  Typography,
+} from "@mui/material";
+import React from "react";
+import { Maps } from "../maps/Maps";
 
 export const MapDialog = ({
   open,
@@ -25,250 +31,307 @@ export const MapDialog = ({
   routePreference,
   handlePreferenceChange,
   formatDuration,
-  onConfirm // New prop to handle confirmation
+  onConfirm,
+  optimizeRoute,
 }) => {
-  // Function to handle both confirming the route and closing the dialog
-  const handleConfirm = () => {
-    if (routeData) {
-      onConfirm(routeData);
-    }
-    onClose();
-  };
+  const preferenceOptions = [
+    { value: "recommended", label: "Consigliato" },
+    { value: "fastest", label: "Più veloce" },
+    { value: "shortest", label: "Più breve" },
+  ];
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="xl"
       fullWidth
-      slotProps={{
-        paper: {
-          sx: {
-            height: { xs: "auto", sm: "90vh" },
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-          },
+      maxWidth="lg"
+      PaperProps={{
+        sx: {
+          height: "90vh",
+          maxHeight: "90vh",
+          position: "relative",
+          overflow: "hidden",
         },
       }}
     >
-      <DialogTitle>
-        Percorso di Viaggio
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-            zIndex: 2,
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      {/* Contenitore per le info mobili - visibile solo su mobile */}
-      <Box
+      <DialogTitle
         sx={{
-          display: { xs: "flex", sm: "none" },
-          flexDirection: "column",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           p: 2,
-          gap: 2,
         }}
       >
-        {/* Riquadro Origine e Destinazione (mobile) */}
-        <Paper
-          elevation={3}
-          sx={{
-            p: 2,
-            borderRadius: 2,
-          }}
-        >
-          {routeData && (
-            <>
-              <Typography
-                variant="subtitle2"
-                fontWeight="bold"
-                color="primary"
-                gutterBottom
-              >
-                Origine e Destinazione
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Partenza:</strong>{" "}
-                {routeData?.cities ? routeData.cities[0].toUpperCase() : ""}
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Arrivo:</strong>{" "}
-                {routeData?.cities
-                  ? routeData.cities[routeData.cities.length - 1].toUpperCase()
-                  : ""}
-              </Typography>
+        <Typography variant="h6" component="div">
+          {optimizeRoute ? "Optimized Route" : "Trip Route"} 
+        </Typography>
+        <Box display="flex" alignItems="center" gap={2}>
+          <FormControl
+            variant="outlined"
+            size="small"
+            sx={{ minWidth: "150px" }}
+          >
+            <Select
+              value={routePreference}
+              onChange={handlePreferenceChange}
+              displayEmpty
+              inputProps={{ "aria-label": "Without label" }}
+            >
+              {preferenceOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={onClose}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
 
-              {routeData?.cities && routeData.cities.length > 2 && (
+      {routeLoading && (
+        <LinearProgress sx={{ position: "absolute", top: 0, left: 0, right: 0 }} />
+      )}
+
+      <DialogContent
+        sx={{
+          p: 0,
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          height: "calc(90vh - 130px)",
+        }}
+      >
+        {/* Sidebar with route details */}
+        <Paper
+          sx={{
+            width: { xs: "100%", sm: "320px" },
+            height: { xs: "auto", sm: "100%" },
+            overflow: "auto",
+            p: 2,
+            borderRadius: 0,
+            boxShadow: "none",
+            borderRight: "1px solid rgba(0, 0, 0, 0.12)",
+          }}
+          elevation={0}
+        >
+          {routeLoading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                p: 4,
+              }}
+            >
+              <Typography>Calculating best route...</Typography>
+            </Box>
+          ) : (
+            <>
+              {routeData && (
                 <>
-                  <Typography variant="body2" gutterBottom>
-                    <strong>Tappe intermedie:</strong>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    color="primary"
+                    gutterBottom
+                  >
+                    {optimizeRoute ? "Optimized Pickup Order" : "Pickup Order"}
                   </Typography>
-                  <Box component="ul" sx={{ pl: 2, mt: 0, mb: 1 }}>
-                    {routeData?.cities.slice(1, -1).map((city, index) => (
-                      <Typography
-                        component="li"
-                        key={index}
-                        variant="body2"
+
+                  {/* Driver */}
+                  {routeData.friends && routeData.friends.length > 0 && (
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        mb: 2,
+                        p: 1.5,
+                        borderRadius: 2,
+                        backgroundColor: 'rgba(25, 118, 210, 0.1)'
+                      }}
+                    >
+                      <Avatar 
+                        sx={{ 
+                          bgcolor: 'primary.main',
+                          width: 36, 
+                          height: 36
+                        }}
                       >
-                        {city.toUpperCase()}
-                      </Typography>
-                    ))}
+                        <DirectionsCarIcon sx={{ fontSize: 20 }} />
+                      </Avatar>
+                      <Box sx={{ ml: 1.5 }}>
+                        <Typography variant="subtitle2">
+                          {routeData.friends[0]}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Driver
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+
+                  <Box sx={{ mb: 2 }}>
+                    {/* Friends to pickup */}
+                    {routeData.cities && routeData.cities.map((city, index) => {
+                      // Skip the first (driver) and last (destination)
+                      if (index === 0 || index === routeData.cities.length - 1) return null;
+                      
+                      return (
+                        <Box 
+                          key={index} 
+                          sx={{ 
+                            display: 'flex', 
+                            mb: 1,
+                            position: 'relative'
+                          }}
+                        >
+                          {/* Vertical timeline connector */}
+                          <Box sx={{ 
+                            position: 'absolute', 
+                            left: 18, 
+                            top: 0, 
+                            bottom: 0, 
+                            width: 2, 
+                            backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                            zIndex: 0
+                          }} />
+                          
+                          {/* Friend pickup point */}
+                          <Box sx={{ 
+                            display: 'flex', 
+                            p: 1.5,
+                            borderRadius: 2,
+                            backgroundColor: 'rgba(156, 39, 176, 0.08)',
+                            position: 'relative',
+                            zIndex: 1,
+                            width: '100%'
+                          }}>
+                            <Avatar 
+                              sx={{ 
+                                bgcolor: 'secondary.main',
+                                width: 36, 
+                                height: 36
+                              }}
+                            >
+                              {index}
+                            </Avatar>
+                            <Box sx={{ ml: 1.5 }}>
+                              <Typography variant="subtitle2">
+                                {routeData.friends[index]}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                {city.split(',')[0]}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                    
+                    {/* Destination */}
+                    {routeData.cities && routeData.cities.length > 0 && (
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mt: 1,
+                          p: 1.5,
+                          borderRadius: 2,
+                          backgroundColor: 'rgba(76, 175, 80, 0.1)'
+                        }}
+                      >
+                        <Avatar 
+                          sx={{ 
+                            bgcolor: 'success.main',
+                            width: 36, 
+                            height: 36
+                          }}
+                        >
+                          <PlaceIcon sx={{ fontSize: 20 }} />
+                        </Avatar>
+                        <Box sx={{ ml: 1.5 }}>
+                          {routeData.friends && routeData.friends.length > 0 && (
+                            <Typography variant="subtitle2">
+                              {routeData.friends[routeData.friends.length - 1]}
+                            </Typography>
+                          )}
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary"
+                            sx={{ display: 'block' }}
+                          >
+                            Final Destination
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
+
+                  <Divider sx={{ my: 2 }} />
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    color="primary"
+                    gutterBottom
+                  >
+                    Trip Information
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Total Distance:</strong> {routeData?.distance_km} km
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Estimated Duration:</strong>{" "}
+                    {formatDuration(routeData?.duration_min)}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <strong>Transportation:</strong>{" "}
+                    <DirectionsCarIcon fontSize="small" sx={{ verticalAlign: 'middle', ml: 0.5 }} /> 
+                    Driving
+                  </Typography>
+                  {routeData.optimized && (
+                    <Chip 
+                      label="Route Optimized" 
+                      color="success" 
+                      variant="outlined" 
+                      size="small" 
+                      sx={{ mt: 1 }}
+                    />
+                  )}
                 </>
               )}
-
-              <Divider sx={{ my: 1.5 }} />
-              <Typography
-                variant="subtitle2"
-                fontWeight="bold"
-                color="primary"
-                gutterBottom
-              >
-                Informazioni Percorso
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Distanza:</strong> {routeData?.distance_km} km
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Durata:</strong>{" "}
-                {formatDuration(routeData?.duration_min)}
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Modalità:</strong>{" "}
-                {routeData?.mode === "driving"
-                  ? "In auto"
-                  : routeData?.mode === "walking"
-                  ? "A piedi"
-                  : routeData?.mode}
-              </Typography>
             </>
           )}
         </Paper>
 
-        {/* Riquadro Tipo di percorso (mobile) */}
-        <Paper
-          elevation={3}
+        {/* Map container */}
+        <Box
           sx={{
-            p: 2,
-            borderRadius: 2,
+            flex: 1,
+            position: "relative",
+            height: { xs: "50vh", sm: "100%" },
           }}
         >
-          <Typography
-            variant="subtitle2"
-            fontWeight="bold"
-            color="primary"
-            gutterBottom
-          >
-            Tipo di percorso
-          </Typography>
-          <FormControl fullWidth size="small">
-            <Select
-              labelId="route-preference-label-mobile"
-              id="route-preference-mobile"
-              value={routePreference}
-              onChange={handlePreferenceChange}
-              disabled={routeLoading}
-            >
-              <MenuItem value="recommended">Raccomandato</MenuItem>
-              <MenuItem value="shortest">Più breve</MenuItem>
-              <MenuItem value="fastest">Più veloce</MenuItem>
-            </Select>
-          </FormControl>
-          {routeLoading && (
-            <Box sx={{ display: "flex", justifyContent: "center", my: 1 }}>
-              <CircularProgress size={24} />
-            </Box>
-          )}
-        </Paper>
-        
-        {/* Pulsante Conferma percorso (mobile) */}
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleConfirm} // Changed to new handler
-          fullWidth
-          disabled={routeLoading}
-          sx={{ mt: 1 }}
-        >
-          Conferma percorso
-        </Button>
-      </Box>
+          <Maps mapData={routeData} />
+        </Box>
 
-      <DialogContent
-        sx={{
-          position: "relative",
-          p: 0,
-          flex: 1,
-          height: { xs: "70vh", sm: "auto" },
-          minHeight: { xs: "70vh", sm: "auto" },
-        }}
-      >
-        {/* Pannello in basso a sinistra per la preferenza di percorso (desktop) */}
-        <Paper
-          elevation={8}
-          sx={{
-            position: "absolute",
-            bottom: 16,
-            left: 16,
-            zIndex: 999,
-            width: "250px",
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            p: 2,
-            borderRadius: 2,
-            boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-            display: { xs: "none", sm: "block" },
-          }}
-        >
-          <Typography
-            variant="subtitle2"
-            fontWeight="bold"
-            color="primary"
-            gutterBottom
-          >
-            Tipo di percorso
-          </Typography>
-          <FormControl fullWidth size="small">
-            <Select
-              labelId="route-preference-label"
-              id="route-preference"
-              value={routePreference}
-              onChange={handlePreferenceChange}
-              disabled={routeLoading}
-            >
-              <MenuItem value="recommended">Raccomandato</MenuItem>
-              <MenuItem value="shortest">Più breve</MenuItem>
-              <MenuItem value="fastest">Più veloce</MenuItem>
-            </Select>
-          </FormControl>
-          {routeLoading && (
-            <Box sx={{ display: "flex", justifyContent: "center", my: 1 }}>
-              <CircularProgress size={24} />
-            </Box>
-          )}
-        </Paper>
-
-        {/* Collegamenti esterni in alto a sinistra (desktop) */}
+        {/* External links */}
         {routeData?.map_urls && (
           <Paper
             elevation={4}
             sx={{
               position: "absolute",
               top: 16,
-              left: 16,
+              right: 16,
               zIndex: 999,
               backgroundColor: "rgba(255, 255, 255, 0.7)",
               p: 1.5,
               borderRadius: 2,
-              display: { xs: "none", sm: "block" },
             }}
           >
             <Typography
@@ -278,213 +341,37 @@ export const MapDialog = ({
               gutterBottom
               sx={{ fontSize: "0.85rem" }}
             >
-              Collegamenti esterni
+              External Maps
             </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", gap: 1 }}>
               {routeData?.map_urls?.google_maps && (
                 <Button
                   size="small"
+                  variant="outlined"
                   href={routeData?.map_urls?.google_maps}
                   target="_blank"
-                  sx={{
-                    minWidth: "40px",
-                    paddingLeft: 1,
-                    paddingRight: 1,
-                    backgroundImage: "url(/google-maps.svg)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "center",
-                  }}
-                />
-              )}
-              {routeData?.map_urls?.facilmap && (
-                <Button
-                  size="small"
-                  href={routeData?.map_urls?.facilmap}
-                  target="_blank"
-                  sx={{
-                    backgroundImage: "url(/Openstreetmap_logo.svg)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "center",
-                  }}
-                />
-              )}
-            </Box>
-          </Paper>
-        )}
-
-        {/* Mappa a schermo intero */}
-        <Box
-          sx={{
-            height: "100%",
-            width: "100%",
-            position: "absolute",
-            top: 0,
-            left: 0,
-          }}
-        >
-          <Maps mapData={routeData} />
-        </Box>
-
-        {/* Collegamenti esterni in basso a sinistra (mobile) */}
-        {routeData?.map_urls && (
-          <Paper
-            elevation={4}
-            sx={{
-              position: "absolute",
-              bottom: 16,
-              left: 16,
-              zIndex: 999,
-              backgroundColor: "rgba(255, 255, 255, 0.85)",
-              p: 1.5,
-              borderRadius: 2,
-              display: { xs: "block", sm: "none" },
-            }}
-          >
-            <Typography
-              variant="subtitle2"
-              fontWeight="bold"
-              color="primary"
-              gutterBottom
-              sx={{ fontSize: "0.85rem" }}
-            >
-              Collegamenti esterni
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              {routeData?.map_urls?.google_maps && (
-                <Button
-                  size="small"
-                  href={routeData?.map_urls?.google_maps}
-                  target="_blank"
-                  sx={{
-                    minWidth: "40px",
-                    paddingLeft: 1,
-                    paddingRight: 1,
-                    backgroundImage: "url(/google-maps.svg)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "center",
-                  }}
-                />
-              )}
-              {routeData?.map_urls?.facilmap && (
-                <Button
-                  size="small"
-                  href={routeData?.map_urls?.facilmap}
-                  target="_blank"
-                  sx={{
-                    backgroundImage: "url(/Openstreetmap_logo.svg)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "center",
-                  }}
-                />
-              )}
-            </Box>
-          </Paper>
-        )}
-
-        {/* Dettagli del viaggio in alto a destra (desktop) */}
-        <Paper
-          elevation={8}
-          sx={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            zIndex: 999,
-            width: "350px",
-            maxWidth: "90%",
-            maxHeight: "70%",
-            overflowY: "auto",
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            p: 2,
-            borderRadius: 2,
-            boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-            display: { xs: "none", sm: "block" },
-          }}
-        >
-          {routeData && (
-            <>
-              <Typography
-                variant="subtitle2"
-                fontWeight="bold"
-                color="primary"
-                gutterBottom
-              >
-                Origine e Destinazione
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Partenza:</strong>{" "}
-                {routeData?.cities ? routeData.cities[0].toUpperCase() : ""}
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Arrivo:</strong>{" "}
-                {routeData?.cities
-                  ? routeData.cities[routeData.cities.length - 1].toUpperCase()
-                  : ""}
-              </Typography>
-
-              {routeData?.cities && routeData.cities.length > 2 && (
-                <>
-                  <Typography variant="body2" gutterBottom>
-                    <strong>Tappe intermedie:</strong>
-                  </Typography>
-                  <Box component="ul" sx={{ pl: 2, mt: 0, mb: 1 }}>
-                    {routeData?.cities.slice(1, -1).map((city, index) => (
-                      <Typography
-                        component="li"
-                        key={index}
-                        variant="body2"
-                      >
-                        {city.toUpperCase()}
-                      </Typography>
-                    ))}
-                  </Box>
-                </>
-              )}
-
-              <Divider sx={{ my: 1.5 }} />
-              <Typography
-                variant="subtitle2"
-                fontWeight="bold"
-                color="primary"
-                gutterBottom
-              >
-                Informazioni Percorso
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Distanza:</strong> {routeData?.distance_km} km
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Durata:</strong>{" "}
-                {formatDuration(routeData?.duration_min)}
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Modalità:</strong>{" "}
-                {routeData?.mode === "driving"
-                  ? "In auto"
-                  : routeData?.mode === "walking"
-                  ? "A piedi"
-                  : routeData?.mode}
-              </Typography>
-              
-              {/* Pulsante Conferma percorso nel pannello info */}
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  onClick={handleConfirm} // Changed to new handler
-                  disabled={routeLoading}
-                  fullWidth
                 >
-                  Conferma percorso
+                  Google Maps
                 </Button>
-              </Box>
-            </>
-          )}
-        </Paper>
+              )}
+            </Box>
+          </Paper>
+        )}
       </DialogContent>
+
+      <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(0, 0, 0, 0.12)' }}>
+        <Button onClick={onClose} variant="outlined">
+          Back
+        </Button>
+        <Button
+          onClick={() => onConfirm(routeData)}
+          variant="contained"
+          color="primary"
+          disabled={routeLoading}
+        >
+          Confirm Route
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

@@ -1,80 +1,107 @@
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MapIcon from "@mui/icons-material/Map";
+import PersonIcon from "@mui/icons-material/Person";
+import InfoIcon from "@mui/icons-material/Info";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import {
   Box,
   Button,
   Card,
   CardHeader,
+  Checkbox,
   Collapse,
   Divider,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormHelperText,
+  FormLabel,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Radio,
+  RadioGroup,
+  Select,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
-import { KmTable } from "../KmTable"; // Import the new component
+import React, { useState, useEffect } from "react";
 
 export const RimborsiKm = ({
-  startCity,
-  setStartCity,
-  startAddress,
-  setStartAddress,
-  endCity,
-  setEndCity,
-  endAddress,
-  setEndAddress,
-  waypoints,
-  setWaypoints,
+  friends,
+  updateFriendAddress,
+  driver,
+  setDriver,
+  selectedFriends,
+  setSelectedFriends,
+  destinationAddress,
+  setDestinationAddress,
+  destinationFriend,
+  setDestinationFriend,
   handleValidationMap,
   routeLoading,
-  inputErrors,
-  // Aggiungi i nuovi props
-  carBrand,
-  setCarBrand,
-  carModel,
-  setCarModel,
-  carEngine,
-  setCarEngine,
-  // Nuovo campo data
   travelDate,
   setTravelDate,
-  // Add new props for KmTable
-  kmEntries,
-  onDeleteKm,
-  onEditKm,
-  onCompanyCarToggle,
-  calculateKmAmount,
+  inputErrors,
+  optimizeRoute,
+  setOptimizeRoute,
 }) => {
-  // Stato per controllare l'espansione del componente
   const [expanded, setExpanded] = useState(true);
-
-  // Toggle per espandere/comprimere il componente
+  const [destinationType, setDestinationType] = useState(destinationFriend ? "friend" : "address");
+  
+  // Initialize available friends for pickup (filtering out the driver and destination friend)
+  const [availableForPickup, setAvailableForPickup] = useState([]);
+  
+  // Update available friends whenever driver or destination friend changes
+  useEffect(() => {
+    // Filter out driver and destination friend from the available pickup options
+    setAvailableForPickup(
+      friends
+        .filter(f => f.name !== driver && (destinationType !== "friend" || f.name !== destinationFriend))
+        .map(f => f.name)
+    );
+    
+    // If driver is part of selected friends, remove them
+    if (driver && selectedFriends.includes(driver)) {
+      setSelectedFriends(prev => prev.filter(name => name !== driver));
+    }
+    
+    // If destination friend is part of selected friends, remove them
+    if (destinationType === "friend" && destinationFriend && selectedFriends.includes(destinationFriend)) {
+      setSelectedFriends(prev => prev.filter(name => name !== destinationFriend));
+    }
+  }, [driver, destinationFriend, destinationType, friends]);
+  
   const handleExpandToggle = () => {
     setExpanded(!expanded);
   };
-
-  // Funzioni per gestire i waypoints
-  const addWaypoint = () => {
-    setWaypoints([...waypoints, { city: "", address: "" }]);
+  
+  const handleFriendSelection = (event) => {
+    const friendName = event.target.value;
+    if (event.target.checked) {
+      setSelectedFriends(prev => [...prev, friendName]);
+    } else {
+      setSelectedFriends(prev => prev.filter(name => name !== friendName));
+    }
   };
-
-  const removeWaypoint = (index) => {
-    const newWaypoints = [...waypoints];
-    newWaypoints.splice(index, 1);
-    setWaypoints(newWaypoints);
+  
+  const handleDestinationTypeChange = (event) => {
+    const newType = event.target.value;
+    setDestinationType(newType);
+    
+    if (newType === "friend") {
+      setDestinationAddress("");
+    } else {
+      setDestinationFriend("");
+    }
   };
-
-  const updateWaypoint = (index, field, value) => {
-    const newWaypoints = [...waypoints];
-    newWaypoints[index] = { ...newWaypoints[index], [field]: value };
-    setWaypoints(newWaypoints);
-  };
-
+  
   return (
     <Card
       className="MuiCard-solidBorder"
@@ -82,16 +109,15 @@ export const RimborsiKm = ({
         boxShadow:
           "rgba(0, 0, 0, 0.1) 0px 4px 30px, rgba(255, 255, 255, 0.6) 0px 1px 1px inset",
         position: "relative",
-        // Rimuovi borderTop e paddingTop perché sono già definiti nella classe
       }}
     >
       <CardHeader
-        title="Rimborso Km"
+        title="Trip Route Planner"
         action={
           <IconButton
             onClick={handleExpandToggle}
             aria-expanded={expanded}
-            aria-label="mostra/nascondi dettagli"
+            aria-label="show/hide details"
           >
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
@@ -99,34 +125,24 @@ export const RimborsiKm = ({
         sx={{
           opacity: 1,
           padding: "8px",
-          marginBottom: expanded ? "8px" : "0",
-          borderBottom: expanded
-            ? "1px dashed rgba(194, 194, 194, 0.25)"
-            : "none",
-          transition: "opacity 500ms cubic-bezier(0.4, 0, 0.2, 1)",
+          backgroundColor: "#f9f9f9",
+          borderBottom: "1px solid #e0e0e0",
         }}
       />
 
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ p: 2 }}>
+        <Box
+          component="form"
+          noValidate
+          autoComplete="off"
+          sx={{ padding: "16px" }}
+        >
           <Grid container spacing={2}>
-            {/* Sezione informazioni auto */}
-            <Grid item size={12}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <DirectionsCarIcon sx={{ mr: 1, color: "primary.main" }} />
-                <Typography variant="subtitle1">
-                  Informazioni Viaggio
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-            </Grid>
-
-            {/* Nuovo campo data */}
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
                 type="date"
-                label="Data Viaggio *"
+                label="Trip Date"
                 value={travelDate}
                 error={!!inputErrors?.travelDate}
                 onChange={(e) => setTravelDate(e.target.value)}
@@ -137,190 +153,249 @@ export const RimborsiKm = ({
                 }}
               />
             </Grid>
-
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Marca *"
-                value={carBrand}
-                error={!!inputErrors?.carBrand}
-                onChange={(e) => setCarBrand(e.target.value)}
-                size="small"
-                margin="dense"
-              />
-            </Grid>
-
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Modello *"
-                value={carModel}
-                error={!!inputErrors?.carModel}
-                onChange={(e) => setCarModel(e.target.value)}
-                size="small"
-                margin="dense"
-              />
-            </Grid>
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Cilindrata (cc)"
-                value={carEngine}
-                error={!!inputErrors?.carEngine}
-                onChange={(e) => setCarEngine(e.target.value)}
-                size="small"
-                margin="dense"
-                type="number"
-                slotProps={{
-                  htmlInput: { min: 0 },
-                }}
-              />
-            </Grid>
-
-            {/* Divider per separare le sezioni */}
-            <Grid item size={12}>
+            
+            {/* Driver Section */}
+            <Grid item xs={12}>
               <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
-                <MapIcon sx={{ mr: 1, color: "primary.main" }} />
-                <Typography variant="subtitle1">Itinerario</Typography>
+                <DirectionsCarIcon sx={{ mr: 1, color: "primary.main" }} />
+                <Typography variant="subtitle1">Driver Selection</Typography>
+                <Tooltip title="Select who's driving and enter their address" arrow>
+                  <IconButton size="small">
+                    <InfoIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Divider sx={{ mb: 2 }} />
             </Grid>
-
-            {/* Sezione partenza */}
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Città di partenza *"
-                value={startCity}
-                onChange={(e) => setStartCity(e.target.value)}
-                size="small"
-                margin="dense"
-              />
+            
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth size="small" error={!!inputErrors?.driver}>
+                <InputLabel id="driver-select-label">Driver *</InputLabel>
+                <Select
+                  labelId="driver-select-label"
+                  id="driver-select"
+                  value={driver}
+                  label="Driver *"
+                  onChange={(e) => setDriver(e.target.value)}
+                >
+                  <MenuItem value=""><em>Select driver</em></MenuItem>
+                  {friends.map((friend) => (
+                    <MenuItem key={friend.name} value={friend.name}>
+                      {friend.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {!!inputErrors?.driver && (
+                  <FormHelperText>{inputErrors.driver}</FormHelperText>
+                )}
+              </FormControl>
             </Grid>
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Indirizzo di partenza *"
-                value={startAddress}
-                onChange={(e) => setStartAddress(e.target.value)}
-                size="small"
-                margin="dense"
-              />
-            </Grid>
-            <Grid item size={12}>
-              <Box>
-                <Button
-                  startIcon={<AddCircleOutlineIcon />}
-                  onClick={addWaypoint}
-                  variant="text"
+            
+            {driver && (
+              <Grid item xs={12} sm={6} md={8}>
+                <TextField
+                  fullWidth
+                  label={`${driver}'s Address *`}
+                  value={friends.find(f => f.name === driver)?.address || ""}
+                  onChange={(e) => updateFriendAddress(driver, e.target.value)}
+                  error={!!inputErrors?.driverAddress}
+                  helperText={inputErrors?.driverAddress}
                   size="small"
-                >
-                  Aggiungi tappa
-                </Button>
-              </Box>
-            </Grid>
-
-            {waypoints.map((waypoint, index) => (
-              <React.Fragment key={index}>
-                <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-                  <TextField
-                    fullWidth
-                    label={`Città tappa ${index + 1}`}
-                    value={waypoint.city}
-                    onChange={(e) =>
-                      updateWaypoint(index, "city", e.target.value)
-                    }
-                    size="small"
-                    margin="dense"
-                  />
-                </Grid>
-                <Grid item size={{ xs: 11, sm: 5, md: 4 }}>
-                  <TextField
-                    fullWidth
-                    label={`Indirizzo tappa ${index + 1}`}
-                    value={waypoint.address}
-                    onChange={(e) =>
-                      updateWaypoint(index, "address", e.target.value)
-                    }
-                    size="small"
-                    margin="dense"
-                  />
-                </Grid>
-                <Grid
-                  item
-                  xs={1}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    mt: 1,
-                  }}
-                >
-                  <IconButton
-                    color="error"
-                    onClick={() => removeWaypoint(index)}
-                    size="small"
-                  >
-                    <DeleteOutlineIcon />
+                  margin="dense"
+                  placeholder="Enter full address with city"
+                />
+              </Grid>
+            )}
+            
+            {/* Friend Selection Section */}
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
+                <PersonIcon sx={{ mr: 1, color: "secondary.main" }} />
+                <Typography variant="subtitle1">Friends to Pick Up</Typography>
+                <Tooltip title="Select which friends need a ride" arrow>
+                  <IconButton size="small">
+                    <InfoIcon fontSize="small" />
                   </IconButton>
-                </Grid>
-              </React.Fragment>
-            ))}
-
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Città di arrivo *"
-                value={endCity}
-                onChange={(e) => setEndCity(e.target.value)}
-                size="small"
-                margin="dense"
-              />
+                </Tooltip>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
             </Grid>
-            <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Indirizzo di arrivo *"
-                value={endAddress}
-                onChange={(e) => setEndAddress(e.target.value)}
-                size="small"
-                margin="dense"
-              />
+            
+            <Grid item xs={12}>
+              <FormControl 
+                component="fieldset" 
+                variant="standard" 
+                error={!!inputErrors?.friends}
+                sx={{ width: '100%' }}
+              >
+                <FormLabel component="legend">Select friends to pick up *</FormLabel>
+                <FormGroup sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', mt: 1 }}>
+                  {availableForPickup.map((friendName) => {
+                    const friend = friends.find(f => f.name === friendName);
+                    return (
+                      <FormControlLabel
+                        key={friendName}
+                        control={
+                          <Checkbox 
+                            checked={selectedFriends.includes(friendName)}
+                            onChange={handleFriendSelection}
+                            value={friendName}
+                          />
+                        }
+                        label={
+                          <Box>
+                            {friendName}
+                            {!friend.address && (
+                              <Typography variant="caption" color="error" sx={{ ml: 1 }}>
+                                (address needed)
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                        sx={{ width: { xs: '100%', sm: '50%', md: '33%' } }}
+                      />
+                    );
+                  })}
+                </FormGroup>
+                {!!inputErrors?.friends && (
+                  <FormHelperText>{inputErrors.friends}</FormHelperText>
+                )}
+              </FormControl>
             </Grid>
-
+            
+            {/* Display fields for selected friends' addresses */}
+            {selectedFriends.length > 0 && (
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Addresses for Selected Friends
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {selectedFriends.map((friendName) => (
+                      <Grid item xs={12} sm={6} md={4} key={friendName}>
+                        <TextField
+                          fullWidth
+                          label={`${friendName}'s Address *`}
+                          value={friends.find(f => f.name === friendName)?.address || ""}
+                          onChange={(e) => updateFriendAddress(friendName, e.target.value)}
+                          error={inputErrors?.friendAddresses && inputErrors.friendAddresses.includes(friendName)}
+                          size="small"
+                          margin="dense"
+                          placeholder="Enter full address with city"
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              </Grid>
+            )}
+            
+            {/* Destination Section */}
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", alignItems: "center", mt: 2, mb: 1 }}>
+                <LocationOnIcon sx={{ mr: 1, color: "success.main" }} />
+                <Typography variant="subtitle1">Destination</Typography>
+                <Tooltip title="Select where everyone is going" arrow>
+                  <IconButton size="small">
+                    <InfoIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl component="fieldset" error={!!inputErrors?.destination}>
+                <FormLabel component="legend">Destination Type *</FormLabel>
+                <RadioGroup
+                  row
+                  name="destination-type"
+                  value={destinationType}
+                  onChange={handleDestinationTypeChange}
+                >
+                  <FormControlLabel 
+                    value="address" 
+                    control={<Radio />} 
+                    label="Custom Address" 
+                  />
+                  <FormControlLabel 
+                    value="friend" 
+                    control={<Radio />} 
+                    label="Friend's Address" 
+                  />
+                </RadioGroup>
+                {!!inputErrors?.destination && (
+                  <FormHelperText>{inputErrors.destination}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+            
+            {destinationType === "address" ? (
+              <Grid item xs={12} sm={8}>
+                <TextField
+                  fullWidth
+                  label="Destination Address *"
+                  value={destinationAddress}
+                  onChange={(e) => setDestinationAddress(e.target.value)}
+                  error={!!inputErrors?.destination}
+                  size="small"
+                  margin="dense"
+                  placeholder="Enter final destination address"
+                />
+              </Grid>
+            ) : (
+              <Grid item xs={12} sm={6} md={4}>
+                <FormControl fullWidth size="small" error={!!inputErrors?.destination}>
+                  <InputLabel id="destination-friend-label">Destination Friend *</InputLabel>
+                  <Select
+                    labelId="destination-friend-label"
+                    value={destinationFriend}
+                    label="Destination Friend *"
+                    onChange={(e) => setDestinationFriend(e.target.value)}
+                  >
+                    <MenuItem value=""><em>Select friend</em></MenuItem>
+                    {friends
+                      .filter(f => f.name !== driver)
+                      .map((friend) => (
+                        <MenuItem 
+                          key={friend.name} 
+                          value={friend.name}
+                          disabled={!friend.address}
+                        >
+                          {friend.name}
+                          {!friend.address && " (address needed)"}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                  {!!inputErrors?.destinationAddress && (
+                    <FormHelperText>{inputErrors.destinationAddress}</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+            )}
+            
             <Grid
               item
               xs={12}
-              sm={6}
-              md={4}
               sx={{
-                mt: 1,
-                mb: 1,
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent: "center",
+                mt: 3,
               }}
             >
               <Button
                 variant="contained"
                 color="primary"
-                startIcon={<MapIcon />}
                 onClick={handleValidationMap}
                 disabled={routeLoading}
+                sx={{ minWidth: 200 }}
+                startIcon={<DirectionsCarIcon />}
               >
-                {routeLoading ? "Calcolo percorso..." : "Seleziona Percorso"}
+                {routeLoading ? "Calculating Route..." : "Find Best Pickup Order"}
               </Button>
             </Grid>
           </Grid>
         </Box>
-
-        {/* Add the KmTable component */}
-        <KmTable
-          kms={kmEntries}
-          onDeleteKm={onDeleteKm}
-          onEditKm={onEditKm}
-          onCompanyCarToggle={onCompanyCarToggle}
-          calculateKmAmount={calculateKmAmount}
-        />
       </Collapse>
     </Card>
   );

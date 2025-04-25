@@ -8,35 +8,33 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   IconButton,
   Paper,
   Snackbar,
+  Switch,
   Typography,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import React, { useState } from "react";
-import logo from "./assets/Keytech.png";
 import { MapDialog } from "./components/dialogs/MapDialog";
 import { RimborsiKm } from "./components/forms/RimborsiKm";
-import { SummaryCard } from "./components/SummaryCard";
 import { theme } from "./theme";
 
 const MAX_WIDTH = "1200px";
 
-const MONTHS = [
-  "GENNAIO",
-  "FEBBRAIO",
-  "MARZO",
-  "APRILE",
-  "MAGGIO",
-  "GIUGNO",
-  "LUGLIO",
-  "AGOSTO",
-  "SETTEMBRE",
-  "OTTOBRE",
-  "NOVEMBRE",
-  "DICEMBRE",
+// Define the list of friends
+const FRIENDS = [
+  { name: "Mattosky", address: "" },
+  { name: "Nino", address: "" },
+  { name: "Giorgia", address: "" },
+  { name: "Mati (mamma)", address: "" },
+  { name: "Mati (papa)", address: "" },
+  { name: "Noemi", address: "" },
+  { name: "Luigi", address: "" },
+  { name: "Laura", address: "" },
+  { name: "Rocco", address: "" },
 ];
 
 function App() {
@@ -48,23 +46,18 @@ function App() {
   });
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
 
-  const [startCity, setStartCity] = useState("");
-  const [startAddress, setStartAddress] = useState("");
-  const [endCity, setEndCity] = useState("");
-  const [endAddress, setEndAddress] = useState("");
+  const [friends, setFriends] = useState(FRIENDS);
+  const [driver, setDriver] = useState("");
+  const [destinationAddress, setDestinationAddress] = useState("");
+  const [destinationFriend, setDestinationFriend] = useState("");
+  
+  const [selectedFriends, setSelectedFriends] = useState([]);
   const [waypoints, setWaypoints] = useState([]);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeData, setRouteData] = useState(null);
   const [routePreference, setRoutePreference] = useState("recommended");
-
-  const [carBrand, setCarBrand] = useState("");
-  const [carModel, setCarModel] = useState("");
-  const [carEngine, setCarEngine] = useState("");
-
-  const [kmEntries, setKmEntries] = useState([]);
-  const [deleteKmDialogOpen, setDeleteKmDialogOpen] = useState(false);
-  const [kmToDelete, setKmToDelete] = useState(null);
-
+  const [optimizeRoute, setOptimizeRoute] = useState(true);
+  
   const [travelDate, setTravelDate] = useState(() => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
@@ -73,24 +66,45 @@ function App() {
     )}-${String(today.getDate()).padStart(2, "0")}`;
   });
 
-  const validateInputsMap = () => {
-    const errors = {};
-    if (!travelDate) errors.travelDate = "Data Viaggio";
-    if (!startCity) errors.startCity = "Città di partenza";
-    if (!startAddress) errors.startAddress = "Indirizzo di partenza";
-    if (!endCity) errors.endCity = "Città di arrivo";
-    if (!endAddress) errors.endAddress = "Indirizzo di arrivo";
-    if (!carBrand) errors.carBrand = "Marca";
-    if (!carModel) errors.carModel = "Modello";
-    //if (!carEngine) errors.carEngine = "Tipo di motore";
-    return errors;
+  // Update friend address
+  const updateFriendAddress = (friendName, address) => {
+    setFriends(prevFriends => 
+      prevFriends.map(friend => 
+        friend.name === friendName ? { ...friend, address } : friend
+      )
+    );
   };
 
   const validateInputs = () => {
     const errors = {};
-    if (!travelDate) errors.travelDate = "Data Viaggio";
-    if (!carBrand) errors.carBrand = "Marca";
-    if (!carModel) errors.carModel = "Modello";
+    if (!driver) errors.driver = "Driver is required";
+    if (selectedFriends.length === 0) errors.friends = "Select at least one friend";
+    if (!destinationAddress && !destinationFriend) errors.destination = "Destination is required";
+    
+    // Check if driver has address
+    const driverFriend = friends.find(f => f.name === driver);
+    if (driverFriend && !driverFriend.address) {
+      errors.driverAddress = "Driver's address is required";
+    }
+    
+    // Check if selected friends have addresses
+    const missingAddresses = selectedFriends.filter(name => {
+      const friend = friends.find(f => f.name === name);
+      return friend && !friend.address;
+    });
+    
+    if (missingAddresses.length > 0) {
+      errors.friendAddresses = `Missing addresses for: ${missingAddresses.join(', ')}`;
+    }
+    
+    // If destination is a friend, check if they have an address
+    if (destinationFriend) {
+      const destFriend = friends.find(f => f.name === destinationFriend);
+      if (destFriend && !destFriend.address) {
+        errors.destinationAddress = "Destination friend's address is required";
+      }
+    }
+    
     return errors;
   };
 
@@ -103,41 +117,18 @@ function App() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleValidation = async (type) => {
-    
-    if (type === "Excel" || type === "Word") {
-      showMessage("Non disponibile nella versione DEMO", "warning");
-      return;
-    }
-
+  const handleValidationMap = async () => {
     const errors = validateInputs();
     if (Object.keys(errors).length > 0) {
       setInputErrors(errors);
       showMessage(
-        "Impossibile generare " +
-          type +
-          ", parametri mancanti: " +
+        "Cannot generate route: " +
           Object.values(errors).join(", "),
         "error"
       );
       return;
     }
-    setInputErrors({});
-
-    handlePreview(type);
-  };
-
-  const handleValidationMap = async () => {
-    const errors = validateInputsMap();
-    if (Object.keys(errors).length > 0) {
-      setInputErrors(errors);
-      showMessage(
-        "Impossibile generare Mappa, parametri mancanti: " +
-          Object.values(errors).join(", "),
-        "error"
-      );
-      return;
-    }
+    
     setInputErrors({});
     handleSelectRoute();
   };
@@ -153,22 +144,47 @@ function App() {
   };
 
   const handleSelectRoute = async () => {
-    if (!startCity || !startAddress || !endCity || !endAddress) {
-      showMessage("Inserisci città e indirizzo di partenza e arrivo", "error");
+    if (!driver || selectedFriends.length === 0 || (!destinationAddress && !destinationFriend)) {
+      showMessage("Please select driver, friends to pick up, and destination", "error");
       return;
     }
-
+    
+    const driverFriend = friends.find(f => f.name === driver);
+    if (!driverFriend.address) {
+      showMessage("Driver's address is required", "error");
+      return;
+    }
+    
     setRouteLoading(true);
 
     try {
-      const cities = [
-        `${startCity}, ${startAddress}`,
-        ...waypoints.map((wp) => `${wp.city}, ${wp.address}`),
-        `${endCity}, ${endAddress}`,
-      ];
+      // Start with driver's location
+      const cities = [`${driverFriend.address}`];
+      const friendNames = [driver];
+      
+      // Add friends to pick up
+      for (const friendName of selectedFriends) {
+        const friend = friends.find(f => f.name === friendName);
+        if (friend && friend.address) {
+          cities.push(`${friend.address}`);
+          friendNames.push(friendName);
+        }
+      }
+      
+      // Add destination
+      if (destinationFriend) {
+        const destFriend = friends.find(f => f.name === destinationFriend);
+        if (destFriend && destFriend.address) {
+          cities.push(`${destFriend.address}`);
+          friendNames.push(destinationFriend);
+        }
+      } else if (destinationAddress) {
+        cities.push(`${destinationAddress}`);
+        friendNames.push("Destination");
+      }
 
       const response = await fetch(
-        "https://cors.awskeytech.com/https://maps.awskeytech.com/",
+        "http://localhost:8000/",
         {
           method: "POST",
           headers: {
@@ -178,6 +194,8 @@ function App() {
             cities: cities,
             mode: "driving",
             preference: routePreference,
+            optimize: optimizeRoute,
+            friends: friendNames
           }),
         }
       );
@@ -193,17 +211,17 @@ function App() {
           throw new Error(errorMessage);
         }
 
-        throw new Error(`Errore nella richiesta: ${response.status}`);
+        throw new Error(`Error in request: ${response.status}`);
       }
 
       setRouteData(data);
       setMapDialogOpen(true);
-      showMessage("Percorso calcolato con successo", "success");
+      showMessage("Route calculated successfully", "success");
     } catch (error) {
-      console.error("Errore nel calcolo del percorso:", error);
-      if (!error.message.includes("Impossibile trovare le coordinate")) {
+      console.error("Error calculating route:", error);
+      if (!error.message.includes("Cannot find coordinates")) {
         showMessage(
-          `Errore nel calcolo del percorso: ${error.message}`,
+          `Error calculating route: ${error.message}`,
           "error"
         );
       }
@@ -216,18 +234,38 @@ function App() {
     const newPreference = event.target.value;
     setRoutePreference(newPreference);
 
-    if (mapDialogOpen && startCity && endCity) {
+    if (mapDialogOpen) {
       setRouteLoading(true);
 
       try {
-        const cities = [
-          `${startCity}, ${startAddress}`,
-          ...waypoints.map((wp) => `${wp.city}, ${wp.address}`),
-          `${endCity}, ${endAddress}`,
-        ];
+        // Start with driver's location
+        const driverFriend = friends.find(f => f.name === driver);
+        const cities = [`${driverFriend.address}`];
+        const friendNames = [driver];
+        
+        // Add friends to pick up
+        for (const friendName of selectedFriends) {
+          const friend = friends.find(f => f.name === friendName);
+          if (friend && friend.address) {
+            cities.push(`${friend.address}`);
+            friendNames.push(friendName);
+          }
+        }
+        
+        // Add destination
+        if (destinationFriend) {
+          const destFriend = friends.find(f => f.name === destinationFriend);
+          if (destFriend && destFriend.address) {
+            cities.push(`${destFriend.address}`);
+            friendNames.push(destinationFriend);
+          }
+        } else if (destinationAddress) {
+          cities.push(`${destinationAddress}`);
+          friendNames.push("Destination");
+        }
 
         const response = await fetch(
-          "https://cors.awskeytech.com/https://maps.awskeytech.com/",
+          "http://localhost:8000/",
           {
             method: "POST",
             headers: {
@@ -237,6 +275,8 @@ function App() {
               cities: cities,
               mode: "driving",
               preference: newPreference,
+              optimize: optimizeRoute,
+              friends: friendNames
             }),
           }
         );
@@ -251,16 +291,16 @@ function App() {
             showMessage(errorMessage, "error");
             throw new Error(errorMessage);
           }
-          throw new Error(`Errore nella richiesta: ${response.status}`);
+          throw new Error(`Error in request: ${response.status}`);
         }
 
         setRouteData(data);
-        showMessage("Percorso ricalcolato con successo", "success");
+        showMessage("Route recalculated successfully", "success");
       } catch (error) {
-        console.error("Errore nel calcolo del percorso:", error);
-        if (!error.message.includes("Impossibile trovare le coordinate")) {
+        console.error("Error calculating route:", error);
+        if (!error.message.includes("Cannot find coordinates")) {
           showMessage(
-            `Errore nel calcolo del percorso: ${error.message}`,
+            `Error calculating route: ${error.message}`,
             "error"
           );
         }
@@ -270,180 +310,8 @@ function App() {
     }
   };
 
-  const handleAddRoute = (newKmEntry) => {
-    setKmEntries([...kmEntries, newKmEntry]);
-    showMessage("Percorso aggiunto alla tabella", "success");
-  };
-
-  const handleEditKm = (updatedKm) => {
-    setKmEntries((prevEntries) => {
-      const newEntries = [...prevEntries];
-      newEntries[updatedKm.index] = {
-        ...updatedKm,
-      };
-      delete newEntries[updatedKm.index].index;
-      return newEntries;
-    });
-    showMessage("Rimborso chilometrico aggiornato", "success");
-  };
-
-  const handleDeleteKm = (index) => {
-    setKmToDelete(index);
-    setDeleteKmDialogOpen(true);
-  };
-
-  const confirmDeleteKm = () => {
-    setKmEntries((prevEntries) => {
-      const newEntries = [...prevEntries];
-      newEntries.splice(kmToDelete, 1);
-      return newEntries;
-    });
-    setDeleteKmDialogOpen(false);
-    showMessage("Rimborso chilometrico eliminato", "success");
-  };
-
-  const handleCompanyCarToggle = (index) => {
-    setKmEntries((prevEntries) => {
-      const newEntries = [...prevEntries];
-      newEntries[index] = {
-        ...newEntries[index],
-        isCompanyCar: !newEntries[index].isCompanyCar,
-        amount: calculateKmAmount(
-          newEntries[index].totalKm,
-          !newEntries[index].isCompanyCar
-        ),
-      };
-      return newEntries;
-    });
-  };
-
   const handleConfirmRoute = (confirmedRouteData) => {
-    const formattedDate = travelDate
-      ? travelDate.split("-").reverse().join("/")
-      : new Date().toLocaleDateString("it-IT");
-
-    const newKmEntry = {
-      carBrand,
-      carModel,
-      carEngine,
-      startCity,
-      endCity,
-      waypoints: waypoints.map((wp) => wp.city),
-      totalKm: confirmedRouteData.distance_km,
-      amount: calculateKmAmount(confirmedRouteData.distance_km, false),
-      isCompanyCar: false,
-      paymentMethod: "Elettronico",
-      routePreference,
-      date: formattedDate,
-      userName: "Nome",
-      userSurname: "Cognome",
-    };
-
-    handleAddRoute(newKmEntry);
-    showMessage("Percorso aggiunto alla tabella dei rimborsi", "success");
-  };
-
-  const calculateKmAmount = (km, isCompanyCar) => {
-    console.log("km", km);
-    const distance = parseFloat(km);
-    if (!isCompanyCar) return (distance * 0.4).toFixed(2);
-    else {
-      return (distance * 0.2).toFixed(2);
-    }
-  };
-
-  const handleReset = () => {
-    setKmEntries([]);
-    showMessage("Percorsi svuotati", "success");
-  };
-
-  const handlePreview = async (type) => {
-    try {
-      const getMonthName = (date) => {
-        return MONTHS[date.getMonth()];
-      };
-
-      let month;
-      let period = "";
-
-      if (kmEntries.length > 0) {
-        const firstDateParts = kmEntries[0].date.split("/");
-        const firstDate = new Date(firstDateParts[2], firstDateParts[1] - 1, 1);
-
-        const lastDateParts = kmEntries[kmEntries.length - 1].date.split("/");
-        const lastDate = new Date(lastDateParts[2], lastDateParts[1] - 1, 1);
-        lastDate.setMonth(lastDate.getMonth() + 1);
-        lastDate.setDate(0);
-
-        const formatDate = (date) => {
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const year = date.getFullYear();
-          return `${day}/${month}/${year}`;
-        };
-
-        period = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
-        month = getMonthName(firstDate);
-      } else if (kmEntries.length > 0) {
-        // Usa la data dell'ultimo rimborso km
-        const kmDates = kmEntries
-          .filter(entry => entry.date)
-          .map(entry => {
-            const parts = entry.date.split("/");
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-          });
-        
-        if (kmDates.length > 0) {
-          // Ordina le date e prendi la più recente
-          kmDates.sort((a, b) => b - a);
-          const lastDate = kmDates[0];
-          
-          // Calcola il primo e l'ultimo giorno del mese
-          const firstDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), 1);
-          const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 0);
-          
-          const formatDate = (date) => {
-            const day = String(date.getDate()).padStart(2, "0");
-            const month = String(date.getMonth() + 1).padStart(2, "0");
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-          };
-          
-          period = `${formatDate(firstDay)} - ${formatDate(lastDay)}`;
-          month = getMonthName(firstDay);
-        } else {
-          // Se non ci sono date nei rimborsi, usa la data corrente
-          const now = new Date();
-          month = getMonthName(now);
-        }
-      } else {
-        // Se non ci sono né fatture né rimborsi km, usa il mese corrente
-        const now = new Date();
-        month = getMonthName(now);
-      }
-
-      const previewData = {
-        kmEntries,
-        filename: `RIMBORSO_KM_${month}_2025`,
-        period: period,
-      };
-
-      if (type === "Excel") {
-        sessionStorage.setItem("excelPreviewData", JSON.stringify(previewData));
-        window.open("/excel-preview", "_blank");
-      }
-      if (type === "Word") {
-        sessionStorage.setItem("wordPreviewData", JSON.stringify(previewData));
-        window.open("/word-preview", "_blank");
-      }
-      if (type === "PDF") {
-        sessionStorage.setItem("pdfPreviewData", JSON.stringify(previewData));
-        window.open("/pdf-preview", "_blank");
-      }
-    } catch (error) {
-      console.error(error);
-      showMessage("Errore nella generazione dell'anteprima " + type, "error");
-    }
+    showMessage("Route confirmed!", "success");
   };
 
   return (
@@ -474,9 +342,6 @@ function App() {
           elevation={1}
         >
           <Box sx={{ flexGrow: { xs: 0, sm: 1 } }}>
-            <img alt="Logo" src={logo} style={{ height: 32 }} />
-          </Box>
-          <Box sx={{ flexGrow: { xs: 0, sm: 1 } }}>
             <Typography
               variant="h5"
               sx={{
@@ -487,7 +352,7 @@ function App() {
                 fontSize: { xs: "1.25rem", sm: "1.5rem" },
               }}
             >
-              Rimborso KM
+              Onore ai Sopravvissuti
             </Typography>
           </Box>
         </Paper>
@@ -507,93 +372,48 @@ function App() {
               margin: 0,
             }}
           >
-            <Grid size={12} sx={{ mt: 2, mb: 2 }}>
+            <Grid item xs={12} sx={{ mt: 2, mb: 2 }}>
+              <Box sx={{ mb: 2 }}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Onore ai Sopravvissuti
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    Commemorate our survivors by planning an efficient route to pick everyone up! 
+                    Select who's driving, who needs to be picked up, and let the optimizer calculate the best
+                    pickup order to honor their memory.
+                  </Typography>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={optimizeRoute}
+                        onChange={(e) => setOptimizeRoute(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Optimize pickup order"
+                  />
+                </Paper>
+              </Box>
               <RimborsiKm
-                startCity={startCity}
-                setStartCity={setStartCity}
-                startAddress={startAddress}
-                setStartAddress={setStartAddress}
-                endCity={endCity}
-                setEndCity={setEndCity}
-                endAddress={endAddress}
-                setEndAddress={setEndAddress}
-                waypoints={waypoints}
-                setWaypoints={setWaypoints}
+                friends={friends}
+                updateFriendAddress={updateFriendAddress}
+                driver={driver}
+                setDriver={setDriver}
+                selectedFriends={selectedFriends}
+                setSelectedFriends={setSelectedFriends}
+                destinationAddress={destinationAddress}
+                setDestinationAddress={setDestinationAddress}
+                destinationFriend={destinationFriend}
+                setDestinationFriend={setDestinationFriend}
                 handleValidationMap={handleValidationMap}
                 routeLoading={routeLoading}
-                carBrand={carBrand}
-                setCarBrand={setCarBrand}
-                carModel={carModel}
-                setCarModel={setCarModel}
-                carEngine={carEngine}
-                setCarEngine={setCarEngine}
-                inputErrors={inputErrors}
-                kmEntries={kmEntries}
-                onDeleteKm={handleDeleteKm}
-                onEditKm={handleEditKm}
-                onCompanyCarToggle={handleCompanyCarToggle}
-                onAddRoute={handleAddRoute}
-                routeData={routeData}
-                calculateKmAmount={calculateKmAmount}
                 travelDate={travelDate}
                 setTravelDate={setTravelDate}
+                inputErrors={inputErrors}
+                optimizeRoute={optimizeRoute}
+                setOptimizeRoute={setOptimizeRoute}
               />
-            </Grid>
-
-            <Grid size={12}>
-              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                <Box sx={{ flex: 1, maxWidth: "100%" }}>
-                  <SummaryCard kmEntries={kmEntries} />
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid size={12} sx={{ pb: 4 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 2,
-                  mt: 2,
-                }}
-              >
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: { xs: "column", sm: "row" },
-                      gap: 1,
-                    }}
-                  >
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => handleValidation("Excel")}
-                    >
-                      Anteprima Excel
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="info"
-                      onClick={() => handleValidation("Word")}
-                    >
-                      Anteprima Word
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      onClick={() => handleValidation("PDF")}
-                    >
-                      Anteprima PDF
-                    </Button>
-                  </Box>
-                </Box>
-                <Button variant="outlined" color="error" onClick={handleReset}>
-                  Svuota Percorsi
-                </Button>
-              </Box>
-
             </Grid>
           </Grid>
         </Box>
@@ -607,33 +427,8 @@ function App() {
           handlePreferenceChange={handlePreferenceChange}
           formatDuration={formatDuration}
           onConfirm={handleConfirmRoute}
+          optimizeRoute={optimizeRoute}
         />
-
-        <Dialog
-          open={deleteKmDialogOpen}
-          onClose={() => setDeleteKmDialogOpen(false)}
-          aria-labelledby="delete-km-dialog-title"
-          aria-describedby="delete-km-dialog-description"
-        >
-          <DialogTitle id="delete-km-dialog-title">
-            {"Conferma eliminazione"}
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ py: 1 }}>
-              <Typography variant="body1">
-                Sei sicuro di voler eliminare questo rimborso chilometrico?
-              </Typography>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteKmDialogOpen(false)}>
-              Annulla
-            </Button>
-            <Button onClick={confirmDeleteKm} color="error" autoFocus>
-              Elimina
-            </Button>
-          </DialogActions>
-        </Dialog>
 
         <Snackbar
           open={snackbar.open}
@@ -699,7 +494,7 @@ function App() {
                 fontSize: "0.70rem",
               }}
             >
-              Developed by&nbsp;<b>© Keytech</b>&nbsp;Web Team
+              Onore ai Sopravvissuti &nbsp;-&nbsp; April 25, 2025
             </Typography>
           </Box>
           <Typography
@@ -709,7 +504,7 @@ function App() {
               fontSize: "0.70rem",
             }}
           >
-            Powered by <b>Keytech AI</b>
+            Made for Mattosky, Nino, Giorgia, Mati, Noemi, Luigi, Laura, and Rocco
           </Typography>
         </Box>
       </Box>

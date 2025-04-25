@@ -1,17 +1,20 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Maps from "./components/maps/Maps";
+import { BrowserRouter, Routes, Route, HashRouter } from "react-router-dom";
 import { PDFPreview } from "./components/previews/PDFPreview";
 import App from "./App";
 
 const Router = () => {
+  // Use HashRouter for GitHub Pages deployment to handle client-side routing properly
+  const RouterComponent = window.location.hostname === 'localhost' 
+    ? BrowserRouter 
+    : HashRouter;
+    
   return (
-    <BrowserRouter>
+    <RouterComponent>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/map-preview" element={<Maps />} />
         <Route path="/pdf-preview" element={<PDFPreview />} />
       </Routes>
-    </BrowserRouter>
+    </RouterComponent>
   );
 };
 
