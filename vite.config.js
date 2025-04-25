@@ -4,7 +4,9 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({
+    include: "**/*.jsx",
+  })],
   // Set base path specifically for your GitHub Pages repository
   base: '/onore-ai-sopravvissuti/',
   resolve: {
@@ -12,8 +14,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // Ensure correct entry point
+  // Ensure correct entry point and JSX handling
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      },
+    },
   },
 })
