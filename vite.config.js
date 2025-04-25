@@ -22,5 +22,9 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
       },
     },
+    // Ensure public assets are properly copied
+    assetsDir: 'assets',
+    manifest: true,
+    copyPublicDir: true,
   },
 })
