@@ -15,9 +15,14 @@ import {
   Snackbar,
   Switch,
   Typography,
+  useMediaQuery,
+  useTheme,
+  ImageList,
+  ImageListItem,
+  Fade,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapDialog } from "./components/dialogs/MapDialog";
 import { RimborsiKm } from "./components/forms/RimborsiKm";
 import { theme } from "./theme";
@@ -45,6 +50,22 @@ function App() {
     severity: "error",
   });
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  
+  // Slideshow state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = [
+    "/Media (2).jpg",
+    "/Media (3).jpg"
+  ];
+
+  // Slideshow effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 5000); // Change image every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   const [friends, setFriends] = useState(FRIENDS);
   const [driver, setDriver] = useState("");
@@ -357,6 +378,59 @@ function App() {
           </Box>
         </Paper>
 
+        {/* Image Slideshow */}
+        <Box 
+          sx={{ 
+            width: "100%", 
+            maxWidth: MAX_WIDTH,
+            mb: 2,
+            height: { xs: '200px', sm: '300px', md: '400px' },
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 2,
+            boxShadow: 3
+          }}
+        >
+          {images.map((img, index) => (
+            <Fade 
+              key={index} 
+              in={currentImageIndex === index} 
+              timeout={800}
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                display: currentImageIndex === index ? 'block' : 'none'
+              }}
+            >
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundImage: `url(${img})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
+            </Fade>
+          ))}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              p: 2,
+              textAlign: 'center'
+            }}
+          >
+            <Typography variant="h6">Onore ai Sopravvissuti</Typography>
+            <Typography variant="body2">April 25, 2025</Typography>
+          </Box>
+        </Box>
+
         <Box
           sx={{
             width: "100%",
@@ -476,15 +550,16 @@ function App() {
             left: 0,
             width: "100%",
             backgroundColor: "rgb(245, 245, 245)",
-            padding: "8px 16px",
+            padding: { xs: "8px", sm: "8px 16px" },
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", sm: "center" },
             borderTop: "1px solid rgba(0, 0, 0, 0.1)",
             zIndex: 10,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", width: { xs: "100%", sm: "auto" } }}>
             <Typography
               variant="body2"
               sx={{
@@ -502,6 +577,9 @@ function App() {
             sx={{
               color: "text.secondary",
               fontSize: "0.70rem",
+              mt: { xs: 1, sm: 0 },
+              width: { xs: "100%", sm: "auto" },
+              textAlign: { xs: "left", sm: "right" },
             }}
           >
             Made for Mattosky, Nino, Giorgia, Mati, Noemi, Luigi, Laura, and Rocco
