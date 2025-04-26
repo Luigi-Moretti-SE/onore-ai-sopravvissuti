@@ -90,7 +90,15 @@ const RouteDialog = ({ open, onClose, routeData, formatDuration }) => {
               }}
             >
               <Typography variant="subtitle1">{index + 1}. {routeData.friends[index]}</Typography>
-              <Typography variant="body2" color="text.secondary">{city}</Typography>
+              {/* Only show address for final destination if it's not a friend's location */}
+              {(index === routeData.cities.length - 1 && !routeData.friends[index].includes("Destinazione")) ? 
+                null : 
+                <Typography variant="caption" color="text.secondary">
+                  {index === 0 ? "Driver" : 
+                   index === routeData.cities.length - 1 ? "Final Destination" : 
+                   `Pickup #${index}`}
+                </Typography>
+              }
             </Paper>
           ))}
 

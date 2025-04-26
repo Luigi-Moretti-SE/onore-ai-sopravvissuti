@@ -226,7 +226,7 @@ export const MapDialog = ({
                                 {routeData.friends[index]}
                               </Typography>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                {city.split(',')[0]}
+                                Pickup #{index}
                               </Typography>
                             </Box>
                           </Box>

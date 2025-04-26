@@ -126,12 +126,10 @@ function Maps({ mapData }) {
         <Popup>
           <strong>Starting Point</strong>
           <br />
-          {mapData.cities ? mapData.cities[0] : "Starting point"}
-          {mapData.friends && mapData.friends[0] && (
-            <>
-              <br />
-              <em>{mapData.friends[0]} (Driver)</em>
-            </>
+          {mapData.friends && mapData.friends[0] ? (
+            <em>{mapData.friends[0]} (Driver)</em>
+          ) : (
+            "Starting point"
           )}
         </Popup>
       </Marker>
@@ -157,12 +155,10 @@ function Maps({ mapData }) {
               <Popup>
                 <strong>Stop {index + 1}</strong>
                 <br />
-                {city}
-                {mapData.friends && mapData.friends[index + 1] && index + 1 < mapData.friends.length - 1 && (
-                  <>
-                    <br />
-                    <em>{mapData.friends[index + 1]}</em>
-                  </>
+                {mapData.friends && mapData.friends[index + 1] && index + 1 < mapData.friends.length - 1 ? (
+                  <em>{mapData.friends[index + 1]}</em>
+                ) : (
+                  "Pickup location"
                 )}
               </Popup>
             </Marker>
@@ -186,14 +182,10 @@ function Maps({ mapData }) {
         <Popup>
           <strong>Destination</strong>
           <br />
-          {mapData.cities
-            ? mapData.cities[mapData.cities.length - 1]
-            : "Destination point"}
-          {mapData.friends && mapData.friends[mapData.friends.length - 1] && (
-            <>
-              <br />
-              <em>{mapData.friends[mapData.friends.length - 1]}</em>
-            </>
+          {mapData.friends && mapData.friends[mapData.friends.length - 1] ? (
+            <em>{mapData.friends[mapData.friends.length - 1]}</em>
+          ) : (
+            "Destination location"
           )}
         </Popup>
       </Marker>
