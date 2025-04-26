@@ -318,7 +318,7 @@ export const FriendsTripPlanner = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ p: 3, maxWidth: "1200px", margin: "0 auto" }}>
+      <Box sx={{ p: 3, maxWidth: "1200px", margin: "0 auto", pb: '70px' }}> {/* Added bottom padding */}
         {/* Header */}
         <Paper
           sx={{
@@ -407,7 +407,7 @@ export const FriendsTripPlanner = () => {
               </Select>
             </FormControl>
             
-            {driver && (
+            {/* {driver && (
               <TextField
                 fullWidth
                 label={`Indirizzo di ${driver}`}
@@ -416,7 +416,7 @@ export const FriendsTripPlanner = () => {
                 margin="normal"
                 placeholder="Inserisci indirizzo completo con città"
               />
-            )}
+            )} */}
           </Box>
           
           {/* Friends selection */}
@@ -442,7 +442,7 @@ export const FriendsTripPlanner = () => {
               }
             </FormGroup>
             
-            {selectedFriends.length > 0 && (
+            {/* {selectedFriends.length > 0 && (
               <Grid container spacing={2} sx={{ mt: 1 }}>
                 {selectedFriends.map((friendName) => (
                   <Grid item xs={12} sm={6} md={4} key={friendName}>
@@ -457,7 +457,7 @@ export const FriendsTripPlanner = () => {
                   </Grid>
                 ))}
               </Grid>
-            )}
+            )} */}
           </Box>
           
           {/* Destination */}
@@ -525,10 +525,17 @@ export const FriendsTripPlanner = () => {
             </Button>
           </Box>
         </Paper>
+
+        {/* Added Images */}
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <img src={`${import.meta.env.BASE_URL}Media%20(2).jpg`} alt="Media 2" style={{ maxWidth: '45%', height: 'auto', borderRadius: '8px' }} />
+          <img src={`${import.meta.env.BASE_URL}Media%20(3).jpg`} alt="Media 3" style={{ maxWidth: '45%', height: 'auto', borderRadius: '8px' }} />
+        </Box>
+
       </Box>
       
       {/* Route Result Dialog */}
-      <RouteDialog 
+      <RouteDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         routeData={routeData}
@@ -596,13 +603,3 @@ export const FriendsTripPlanner = () => {
     </ThemeProvider>
   );
 };
-
-// Only render directly if this file is the entry point
-if (import.meta.env.DEV) {
-  const root = ReactDOM.createRoot(document.getElementById("root"));
-  root.render(
-    <React.StrictMode>
-      <FriendsTripPlanner />
-    </React.StrictMode>
-  );
-}
