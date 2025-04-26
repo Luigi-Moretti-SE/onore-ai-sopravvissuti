@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import ReactDOM from "react-dom/client";
+// import ReactDOM from "react-dom/client"; // Removed unused import
 import "./index.css";
-import { ThemeProvider, CssBaseline, Box, Typography, Button, Paper, FormControl, InputLabel, MenuItem, Select, FormHelperText, TextField, Checkbox, FormGroup, FormControlLabel, Grid, Switch, Radio, RadioGroup, Snackbar, Alert, IconButton, CircularProgress } from "@mui/material";
+import { ThemeProvider, CssBaseline, Box, Typography, Button, Paper, FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormGroup, FormControlLabel, Switch, Radio, RadioGroup, Snackbar, Alert, IconButton, CircularProgress } from "@mui/material"; // Removed FormHelperText, Grid
 import { theme } from "./theme";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import CloseIcon from "@mui/icons-material/Close";
