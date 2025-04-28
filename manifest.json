@@ -1,0 +1,20 @@
+{
+  "short_name": "Onore",
+  "name": "Onore ai Sopravvissuti",
+  "icons": [
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "81x81"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "81x81"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
