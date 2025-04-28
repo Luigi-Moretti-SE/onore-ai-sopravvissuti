@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 // import ReactDOM from "react-dom/client"; // Removed unused import
 import "./index.css";
-import { ThemeProvider, CssBaseline, Box, Typography, Button, Paper, FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormGroup, FormControlLabel, Switch, Radio, RadioGroup, Snackbar, Alert, IconButton, CircularProgress } from "@mui/material"; // Removed FormHelperText, Grid
+import { ThemeProvider, CssBaseline, Box, Typography, Button, Paper, FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormGroup, FormControlLabel, Switch, Radio, RadioGroup, Snackbar, Alert, IconButton, CircularProgress } from "@mui/material";
 import { theme } from "./theme";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import CloseIcon from "@mui/icons-material/Close";
@@ -146,15 +146,6 @@ export const FriendsTripPlanner = () => {
     message: "",
     severity: "error",
   });
-  
-  // Update friend address
-  const updateFriendAddress = (friendName, address) => {
-    setFriends(prevFriends => 
-      prevFriends.map(friend => 
-        friend.name === friendName ? { ...friend, address } : friend
-      )
-    );
-  };
   
   const handleDriverChange = (event) => {
     setDriver(event.target.value);
@@ -332,7 +323,7 @@ export const FriendsTripPlanner = () => {
           elevation={1}
         >
           <Box sx={{ flexGrow: { xs: 0, sm: 1 } }}>
-            {/* Logo removed */}
+            {/* Comment removed */}
           </Box>
           <Box sx={{ flexGrow: { xs: 0, sm: 1 } }}>
             <Typography
@@ -406,17 +397,6 @@ export const FriendsTripPlanner = () => {
                 ))}
               </Select>
             </FormControl>
-            
-            {/* {driver && (
-              <TextField
-                fullWidth
-                label={`Indirizzo di ${driver}`}
-                value={friends.find(f => f.name === driver)?.address || ""}
-                onChange={(e) => updateFriendAddress(driver, e.target.value)}
-                margin="normal"
-                placeholder="Inserisci indirizzo completo con città"
-              />
-            )} */}
           </Box>
           
           {/* Friends selection */}
@@ -441,23 +421,6 @@ export const FriendsTripPlanner = () => {
                 ))
               }
             </FormGroup>
-            
-            {/* {selectedFriends.length > 0 && (
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {selectedFriends.map((friendName) => (
-                  <Grid item xs={12} sm={6} md={4} key={friendName}>
-                    <TextField
-                      fullWidth
-                      label={`Indirizzo di ${friendName}`}
-                      value={friends.find(f => f.name === friendName)?.address || ""}
-                      onChange={(e) => updateFriendAddress(friendName, e.target.value)}
-                      margin="normal"
-                      placeholder={`Inserisci indirizzo completo con città`}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            )} */}
           </Box>
           
           {/* Destination */}

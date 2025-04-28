@@ -1,4 +1,4 @@
-import React, { createContext } from 'react';
+import React from "react"; // Removed createContext import
 import { createTheme } from '@mui/material/styles';
 
 export const theme = createTheme({
@@ -243,12 +243,3 @@ export const theme = createTheme({
     }
   }
 });
-
-export const ThemeContext = createContext({ theme });
-export const ThemeProviderCustom = ({ children }) => {
-  return (
-    <ThemeContext.Provider value={{ theme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
